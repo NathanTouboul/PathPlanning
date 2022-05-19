@@ -16,24 +16,34 @@ class GridPixel: public QChartView
         //Constructor
         GridPixel(QChartView* parent=0);
 
-        // Deconstructor
+        // Destructor
         virtual ~GridPixel();
 
 
         // Methods
         QChart* createChart();
-
+        qreal computeDistanceBetweenPoints(const QPointF& pointA, const QPointF& pointB);
 
     private Q_SLOTS:
         void handleClickedPoint(const QPointF& point);
 
     private:
-        // New chart
+
         QChart* chart;
-        QScatterSeries *m_free;
-        QScatterSeries *m_obstacle;
-        const int WIDTH_GRID = 16;
-        const int HEIGHT_GRID = 16;
+        QScatterSeries *freeNodes;
+        QScatterSeries *obstacleNodes;
+        QScatterSeries *seenNodes;
+        QScatterSeries *startNode;
+        QScatterSeries *endNode;
+
+        QPointF startNodePoint;
+        QPointF endNodePoint;
+
+        const int widthGrid = 10;
+        const int heightGrid = 10;
+        const int numCells = widthGrid * heightGrid;
+        const float nodeSpan = 1;
+
 
 };
 

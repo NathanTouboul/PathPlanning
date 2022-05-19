@@ -1,7 +1,6 @@
 #include <QApplication>
 #include "headers/mainWindow.h"
 #include "headers/GridPixel.h"
-#include "headers/AStar.h"
 
 int main(int argc, char *argv[])
 {
@@ -13,7 +12,8 @@ int main(int argc, char *argv[])
 
     // Create Chart in chartview
     QChartView* chartView = window.findChild<QChartView*>("chartView");
-    GridPixel map(chartView);
+
+    GridPixel map;
 
     QChart* chart = map.createChart();
     chartView->setChart(chart);

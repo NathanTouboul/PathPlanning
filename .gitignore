@@ -53,3 +53,6 @@ compile_commands.json
 
 # VSC 
 .vscode/
+
+# User
+safe_append_remove_points

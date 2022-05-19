@@ -1,79 +1,109 @@
 #include <iostream>
 #include <QtCore/QtMath>
 #include <QtCore/QDebug>
-
+#include <cmath>
+#include <exception>
 #include "headers\GridPixel.h"
 
 // Constructor
 GridPixel::GridPixel(QChartView* parent): QChartView(parent),
-    m_free(0), m_obstacle(0)
+    freeNodes(0), obstacleNodes(0)
 {
     //Initialize QChart
     std::cout << "Create Chart \n";
     chart = new QChart();
 
-    // New Grids: free and obstacles
-    m_free = new QScatterSeries();
-    m_obstacle = new QScatterSeries();
+    // New Series of Nodes: free, obstacle, seen, start and goal
+    freeNodes = new QScatterSeries();
+    obstacleNodes = new QScatterSeries();
+    seenNodes = new QScatterSeries();
+    startNode = new QScatterSeries();
+    endNode = new QScatterSeries();
 
-    // Sizing and position of Qchart
-    QPoint positionParent = parent->pos();
-    QRectF RectangleSize(positionParent.x(), positionParent.y(),  parent->width(), parent->height());
-    chart->setPlotArea(RectangleSize);
-
+    // Setting Default start and end points
+    startNodePoint = QPointF(1, heightGrid);
+    endNodePoint = QPointF(widthGrid, 1);
 }
 
-// Deconstructor
-GridPixel::~GridPixel() 
+// Destructor
+GridPixel::~GridPixel()
 {
     std::cout << "Destroying Grid Pixel \n";
-    delete m_free;
-    delete m_obstacle;
+    delete freeNodes;
+    delete obstacleNodes;
+    delete seenNodes;
 };
 
 
 QChart* GridPixel::createChart()
 {
-
-    // Render
-    setRenderHint(QPainter::Antialiasing);
-
-    m_free->setName("Free");
-    m_obstacle->setName("Obstacle");
-
-    qreal x{};
-    for (int i=0;  i < this->WIDTH_GRID; i++)
+    // Populating the grid with nodes
+    qreal x{1};
+    for (int i=1;  i <= this->widthGrid; i++)
     {
-        qreal y{};
-        for (int j=0;  j < this->HEIGHT_GRID; j++)
+        qreal y{1};
+        for (int j=1;  j <= this->heightGrid; j++)
         {
-            *m_free << QPointF(x, y);
-            *m_obstacle << QPointF(x, y);
+                 if (i == startNodePoint.x() && j == startNodePoint.y()){ startNode->append(QPointF(x, y)); }
+            else if (i == endNodePoint.x()   && j == endNodePoint.y()  ){   endNode->append(QPointF(x, y)); }
+            else
+            {
+                freeNodes->append(QPointF(x, y));
+                obstacleNodes->append(QPointF());
+                seenNodes->append(QPoint());
+            }
             y++;
         }
         x++;
     }
 
-    // Define visual shape and sizes
-    m_free->setMarkerSize(qreal(10));
-    m_free->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
+    // Render
+    setRenderHint(QPainter::Antialiasing);
 
-    m_obstacle->setMarkerSize(qreal(10));
-    m_obstacle->setMarkerShape(QScatterSeries::MarkerShapeStar);
+    // Set background color
+    chart->setBackgroundBrush(Qt::SolidPattern);
 
+    // Define shape and size and colors
+    freeNodes->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
+    obstacleNodes->setMarkerShape(QScatterSeries::MarkerShapePentagon);
+    seenNodes->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
+    startNode->setMarkerShape(QScatterSeries::MarkerShapeCircle);
+    endNode->setMarkerShape(QScatterSeries::MarkerShapeStar);
 
-    // Grids in plot
-    chart->addSeries(m_free);
-    chart->addSeries(m_obstacle);
+    freeNodes->setMarkerSize(qreal(25));
+    obstacleNodes->setMarkerSize(qreal(25));
+    seenNodes->setMarkerSize(qreal(25));
+    startNode->setMarkerSize(qreal(25));
+    endNode->setMarkerSize(qreal(25));
+
+    // Adding Series in the chart
+    chart->addSeries(freeNodes);
+    chart->addSeries(obstacleNodes);
+    chart->addSeries(seenNodes);
+    chart->addSeries(startNode);
+    chart->addSeries(endNode);
+
+    // Chart axis
     chart->createDefaultAxes();
-    chart->axes(Qt::Horizontal).first()->setRange(0, 10);
-    chart->axes(Qt::Vertical).first()->setRange(0, 10);
+    QList<QAbstractAxis*> xAxis = chart->axes(Qt::Horizontal);
+    QList<QAbstractAxis*> yAxis = chart->axes(Qt::Vertical);
+    xAxis.first()->setRange(0, this->widthGrid + 1);
+    yAxis.first()->setRange(0, this->heightGrid + 1);
+
+    // Setting name of the nodes
+    freeNodes->setName("Free Nodes");
+    obstacleNodes->setName("Obstacle Nodes");
+    seenNodes->setName("Seen Nodes");
+    startNode->setName("Start Node");
+    endNode->setName("End Nodes");
 
     // Create legends
     chart->legend()->setMarkerShape(QLegend::MarkerShapeFromSeries);
 
     // Connecting signals
-    connect(m_free, &QScatterSeries::clicked, this, &GridPixel::handleClickedPoint);
+    connect(freeNodes, &QScatterSeries::clicked, this, &GridPixel::handleClickedPoint);
+    connect(obstacleNodes, &QScatterSeries::clicked, this, &GridPixel::handleClickedPoint);
+
 
     return chart;
 
@@ -84,25 +114,66 @@ void GridPixel::handleClickedPoint(const QPointF& point)
     // Copy of the point
     QPointF clickedPoint = point;
 
-    // Find the closest point from series 1
-    QPointF closest(INT_MAX, INT_MAX);
+    // Free and obstacle points
+    QList<QPointF> freeNodesPoints = freeNodes->points();
+    QList<QPointF> obstacleNodesPoints = obstacleNodes->points();
 
-    qreal distance(INT_MAX);
-    const auto points = m_free->points();
-    for (const QPointF &currentPoint : points) {
-        qreal currentDistance = qSqrt((currentPoint.x() - clickedPoint.x())
-                                      * (currentPoint.x() - clickedPoint.x())
-                                      + (currentPoint.y() - clickedPoint.y())
-                                      * (currentPoint.y() - clickedPoint.y()));
-        if (currentDistance < distance) {
-            distance = currentDistance;
-            closest = currentPoint;
+
+    // Adding and deleting through indexing and null points
+    qreal nodesDistance(INT_MAX);
+    int closestIndexPos{};
+
+    // Null QPoint
+    QPointF nullQPoint = QPointF();
+    QPointF currentPoint = QPointF();
+
+    for (int indexPos{}; indexPos < numCells -2; indexPos++)
+    {
+        // At each node, the state is either free or obstacle (later would also include start and end nodes)
+        if (obstacleNodesPoints[indexPos] != nullQPoint)
+        {
+            currentPoint = obstacleNodesPoints.at(indexPos);
+        } else {
+            currentPoint = freeNodesPoints.at(indexPos);
+        }
+        qreal currentDistance = computeDistanceBetweenPoints(clickedPoint, currentPoint);
+        if (currentDistance < nodesDistance)
+        {
+            nodesDistance = currentDistance;
+            closestIndexPos = indexPos;
         }
     }
 
-    // Change the color of the point (closest)
-    std::cout << "Modifying points \n";
-    m_free->remove(closest);
-    m_obstacle->append(closest);
+    std::cout << "nodesDistance: " << nodesDistance << "\nclosestIndexPos: " <<closestIndexPos <<"\n";
+    // If the point at closestIndex is a free node, then we add the obstacle
+    if (freeNodesPoints.at(closestIndexPos) != nullQPoint)
+    {
+        // Creating obstactle
+        std::cout << "Creating obstacle at [x=" << obstacleNodesPoints[closestIndexPos].x()
+                                      << ", y=" << obstacleNodesPoints[closestIndexPos].y() << "] \n";
+
+        //obstacleNodes->points()[closestIndexPos] = freeNodes->points()[closestIndexPos];
+        //freeNodes->points()[closestIndexPos] = nullQPoint;
+
+        obstacleNodes->replace(closestIndexPos, freeNodesPoints[closestIndexPos]);
+        freeNodes->replace(closestIndexPos, nullQPoint);
+
+    } else {
+        // Deleting obstacle
+        std::cout << "Deleting obstacle at [x=" << freeNodesPoints[closestIndexPos].x()
+                                      << ", y=" << freeNodesPoints[closestIndexPos].y() << "] \n";
+        //freeNodes->points()[closestIndexPos] = obstacleNodes->points()[closestIndexPos];
+        //obstacleNodes->points()[closestIndexPos] = nullQPoint;
+
+        freeNodes->replace(closestIndexPos, obstacleNodesPoints[closestIndexPos]);
+        obstacleNodes->replace(closestIndexPos, nullQPoint);
+    }
 
 }
+
+qreal GridPixel::computeDistanceBetweenPoints(const QPointF& pointA, const QPointF& pointB)
+{
+    return qSqrt(std::pow(pointA.x() - pointB.x(), 2)
+                 + std::pow(pointA.y() - pointB.y(), 2));
+}
+

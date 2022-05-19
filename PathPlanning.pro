@@ -12,13 +12,11 @@ SOURCES += \
     src\GridPixel.cpp \
     src\main.cpp \
     src\mainWindow.cpp \
-    src\AStar.cpp
 
 
 HEADERS += \
     headers\GridPixel.h \
     headers\mainWindow.h \
-    headers\AStar.h
 
 FORMS += \
     mainWindow.ui
@@ -27,3 +25,6 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+DISTFILES += \
+    safe_append_remove_points

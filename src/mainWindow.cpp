@@ -13,8 +13,11 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent),
     setCentralWidget(centralWidget);
 
     // Set up chartview
+
     QChartView* chartView = new QChartView();
     chartView->setObjectName("chartView");
+    chartView->setMinimumWidth(qreal(200));
+    chartView->setMinimumHeight(qreal(500));
     ui->gridLayout->addWidget(chartView, 1, 0);
 
 }
