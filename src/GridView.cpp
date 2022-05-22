@@ -2,11 +2,11 @@
 #include <QtCore/QtMath>
 #include <QtCore/QDebug>
 #include <cmath>
-#include <exception>
-#include "headers\GridPixel.h"
+#include <QMessageBox>
+#include "headers\GridView.h"
 
 // Constructor
-GridPixel::GridPixel(QChartView* parent): QChartView(parent),
+GridView::GridView(QChartView* parent): QChartView(parent),
     freeNodes(0), obstacleNodes(0)
 {
     //Initialize QChart
@@ -26,16 +26,24 @@ GridPixel::GridPixel(QChartView* parent): QChartView(parent),
 }
 
 // Destructor
-GridPixel::~GridPixel()
+GridView::~GridView()
 {
     std::cout << "Destroying Grid Pixel \n";
     delete freeNodes;
     delete obstacleNodes;
     delete seenNodes;
+    delete startNode;
+    delete endNode;
 };
 
+// Setters: currentInteraction
+void GridView::setCurrentInteraction(int index)
+{
+    currentInteraction = static_cast<INTERACTIONS>(index);
+}
 
-QChart* GridPixel::createChart()
+// Creating the QChart
+QChart* GridView::createChart()
 {
     // Populating the grid with nodes
     qreal x{1};
@@ -61,7 +69,7 @@ QChart* GridPixel::createChart()
     setRenderHint(QPainter::Antialiasing);
 
     // Set background color
-    chart->setBackgroundBrush(Qt::SolidPattern);
+    //chart->setBackgroundBrush(Qt::SolidPattern);
 
     // Define shape and size and colors
     freeNodes->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
@@ -94,22 +102,22 @@ QChart* GridPixel::createChart()
     freeNodes->setName("Free Nodes");
     obstacleNodes->setName("Obstacle Nodes");
     seenNodes->setName("Seen Nodes");
-    startNode->setName("Start Node");
-    endNode->setName("End Nodes");
+    startNode->setName("Start");
+    endNode->setName("Goal");
 
     // Create legends
     chart->legend()->setMarkerShape(QLegend::MarkerShapeFromSeries);
 
     // Connecting signals
-    connect(freeNodes, &QScatterSeries::clicked, this, &GridPixel::handleClickedPoint);
-    connect(obstacleNodes, &QScatterSeries::clicked, this, &GridPixel::handleClickedPoint);
+    connect(freeNodes, &QScatterSeries::clicked, this, &GridView::handleClickedPoint);
+    connect(obstacleNodes, &QScatterSeries::clicked, this, &GridView::handleClickedPoint);
 
 
     return chart;
 
 }
 
-void GridPixel::handleClickedPoint(const QPointF& point)
+void GridView::handleClickedPoint(const QPointF& point)
 {
     // Copy of the point
     QPointF clickedPoint = point;
@@ -117,6 +125,8 @@ void GridPixel::handleClickedPoint(const QPointF& point)
     // Free and obstacle points
     QList<QPointF> freeNodesPoints = freeNodes->points();
     QList<QPointF> obstacleNodesPoints = obstacleNodes->points();
+    QList<QPointF> startNodePoint = startNode->points();
+    QList<QPointF> endNodePoint = endNode->points();
 
 
     // Adding and deleting through indexing and null points
@@ -127,7 +137,8 @@ void GridPixel::handleClickedPoint(const QPointF& point)
     QPointF nullQPoint = QPointF();
     QPointF currentPoint = QPointF();
 
-    for (int indexPos{}; indexPos < numCells -2; indexPos++)
+    // We go through every points (besides start and end)
+    for (int indexPos{}; indexPos < widthGrid * heightGrid - 2; indexPos++)
     {
         // At each node, the state is either free or obstacle (later would also include start and end nodes)
         if (obstacleNodesPoints[indexPos] != nullQPoint)
@@ -143,35 +154,55 @@ void GridPixel::handleClickedPoint(const QPointF& point)
             closestIndexPos = indexPos;
         }
     }
-
-    std::cout << "nodesDistance: " << nodesDistance << "\nclosestIndexPos: " <<closestIndexPos <<"\n";
-    // If the point at closestIndex is a free node, then we add the obstacle
-    if (freeNodesPoints.at(closestIndexPos) != nullQPoint)
+    if (currentInteraction == OBSTACLE)
     {
-        // Creating obstactle
-        std::cout << "Creating obstacle at [x=" << obstacleNodesPoints[closestIndexPos].x()
-                                      << ", y=" << obstacleNodesPoints[closestIndexPos].y() << "] \n";
+        std::cout << "nodesDistance: " << nodesDistance << "\nclosestIndexPos: " <<closestIndexPos <<"\n";
+        // If the point at closestIndex is a free node, then we add the obstacle
+        if (freeNodesPoints.at(closestIndexPos) != nullQPoint)
+        {
+            // Creating obstactle
+            obstacleNodes->replace(closestIndexPos, freeNodesPoints[closestIndexPos]);
+            freeNodes->replace(closestIndexPos, nullQPoint);
 
-        //obstacleNodes->points()[closestIndexPos] = freeNodes->points()[closestIndexPos];
-        //freeNodes->points()[closestIndexPos] = nullQPoint;
+        } else {
+            // Deleting obstacle
+            freeNodes->replace(closestIndexPos, obstacleNodesPoints[closestIndexPos]);
+            obstacleNodes->replace(closestIndexPos, nullQPoint);
+        }
 
-        obstacleNodes->replace(closestIndexPos, freeNodesPoints[closestIndexPos]);
-        freeNodes->replace(closestIndexPos, nullQPoint);
+    } else if (currentInteraction == START)
+    {
+        QPointF previousStartNode = startNodePoint[0];
 
+        // if the point at closestIndex is a free node, we add the start here and the previous start becomes free
+        if (freeNodesPoints.at(closestIndexPos) != nullQPoint)
+        {
+            startNode->replace(previousStartNode, freeNodesPoints[closestIndexPos]);
+            freeNodes->replace(freeNodesPoints[closestIndexPos], previousStartNode);
+        } else{ // if the point at closestIndex is an obstacle node, we add the start here and the previous start becomes obstacle
+            startNode->replace(previousStartNode, obstacleNodesPoints[closestIndexPos]);
+            obstacleNodes->replace(obstacleNodesPoints[closestIndexPos], previousStartNode);
+        }
+    } else if (currentInteraction == END){
+        QPointF previousEndNode = endNodePoint[0];
+
+        // if the point at closestIndex is a free node, we add the end here and the previous end becomes free
+        if (freeNodesPoints.at(closestIndexPos) != nullQPoint)
+        {
+            endNode->replace(previousEndNode, freeNodesPoints[closestIndexPos]);
+            freeNodes->replace(freeNodesPoints[closestIndexPos], previousEndNode);
+        } else{ // if the point at closestIndex is an obstacle node, we add the end here and the previous end becomes obstacle
+            endNode->replace(previousEndNode, obstacleNodesPoints[closestIndexPos]);
+            obstacleNodes->replace(obstacleNodesPoints[closestIndexPos], previousEndNode);
+        }
     } else {
-        // Deleting obstacle
-        std::cout << "Deleting obstacle at [x=" << freeNodesPoints[closestIndexPos].x()
-                                      << ", y=" << freeNodesPoints[closestIndexPos].y() << "] \n";
-        //freeNodes->points()[closestIndexPos] = obstacleNodes->points()[closestIndexPos];
-        //obstacleNodes->points()[closestIndexPos] = nullQPoint;
+        QMessageBox::information(this, "Information", "Please select an interaction type");
 
-        freeNodes->replace(closestIndexPos, obstacleNodesPoints[closestIndexPos]);
-        obstacleNodes->replace(closestIndexPos, nullQPoint);
     }
 
 }
 
-qreal GridPixel::computeDistanceBetweenPoints(const QPointF& pointA, const QPointF& pointB)
+qreal GridView::computeDistanceBetweenPoints(const QPointF& pointA, const QPointF& pointB)
 {
     return qSqrt(std::pow(pointA.x() - pointB.x(), 2)
                  + std::pow(pointA.y() - pointB.y(), 2));
