@@ -12,15 +12,15 @@ QT_USE_NAMESPACE
 struct gridPoint
 {
     int xCoord, yCoord;
-    bool visited; // false -> free, true -> seen
-    bool obstacle;
+    bool visited = false; // false -> free, true -> seen
+    bool obstacle = false;
 };
 
 struct grid
 {
     std::vector<gridPoint> gridPoints;
-    std::array<int, 2> startCoord;
-    std::array<int, 2> endCoord;
+    int startIndex;
+    int endIndex;
 };
 
 class GridView: public QChartView
@@ -69,7 +69,7 @@ class GridView: public QChartView
 
         INTERACTIONS currentInteraction = NONE;
 
-        grid gridPoints;
+        grid gridBackend;
 
 };
 

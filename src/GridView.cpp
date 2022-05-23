@@ -23,12 +23,14 @@ GridView::GridView(QChartView* parent): QChartView(parent),
     // Setting Default start and end points
     startNodePoint = QPointF(1, heightGrid);
     endNodePoint = QPointF(widthGrid, 1);
+
 }
 
 // Destructor
 GridView::~GridView()
 {
-    std::cout << "Destroying Grid Pixel \n";
+    std::cout << "Destroying Grid View \n";
+
     delete freeNodes;
     delete obstacleNodes;
     delete seenNodes;
@@ -47,20 +49,48 @@ QChart* GridView::createChart()
 {
     // Populating the grid with nodes
     qreal x{1};
+
+    // Index for gridPoint Vector
+    int indexGrid{};
     for (int i=1;  i <= this->widthGrid; i++)
     {
         qreal y{1};
         for (int j=1;  j <= this->heightGrid; j++)
         {
-                 if (i == startNodePoint.x() && j == startNodePoint.y()){ startNode->append(QPointF(x, y)); }
-            else if (i == endNodePoint.x()   && j == endNodePoint.y()  ){   endNode->append(QPointF(x, y)); }
+                 if (i == startNodePoint.x() && j == startNodePoint.y())
+                 {
+                     // Adding the starting Node in the startNode QScatterSeries
+                     startNode->append(QPointF(x, y));
+                     // Updating the backend grid: starting Node
+                     gridBackend.startIndex = indexGrid;
+
+                 }
+            else if (i == endNodePoint.x()   && j == endNodePoint.y()  )
+                 {
+                     // Adding the ending Node in the endNode QScatterSeries
+                     endNode->append(QPointF(x, y));
+                     // Updating the backend grid: ending Node
+                     gridBackend.endIndex = indexGrid;
+
+                 }
             else
             {
+                // Populating the QScatter Series
                 freeNodes->append(QPointF(x, y));
                 obstacleNodes->append(QPointF());
-                seenNodes->append(QPoint());
+                seenNodes->append(QPoint());   
             }
+
+             // Grid Point: updating coordinated, already initialized as visited == false
+             gridPoint gridPointBackend;
+             gridPointBackend.xCoord = int(x);
+             gridPointBackend.yCoord = int(y);
+
+             // Populating the backend grid with the point (including start and end)
+             gridBackend.gridPoints.push_back(gridPointBackend);
+
             y++;
+            indexGrid++;
         }
         x++;
     }
@@ -160,14 +190,21 @@ void GridView::handleClickedPoint(const QPointF& point)
         // If the point at closestIndex is a free node, then we add the obstacle
         if (freeNodesPoints.at(closestIndexPos) != nullQPoint)
         {
-            // Creating obstactle
+            // Creating obstacle
             obstacleNodes->replace(closestIndexPos, freeNodesPoints[closestIndexPos]);
             freeNodes->replace(closestIndexPos, nullQPoint);
+
+            // Updating point as an obstacle in backend grid
+            // WRONG CANNOT USE CLOSEST INDEX gridBackend.gridPoints[closestIndexPos].obstacle = true;
 
         } else {
             // Deleting obstacle
             freeNodes->replace(closestIndexPos, obstacleNodesPoints[closestIndexPos]);
             obstacleNodes->replace(closestIndexPos, nullQPoint);
+
+            // Updating point as a free node in backend grid
+            // WRONG CANNOT USE CLOSEST INDEX  (maybe just - 2 ??) gridBackend.gridPoints[closestIndexPos].obstacle = false;
+
         }
 
     } else if (currentInteraction == START)
@@ -177,11 +214,26 @@ void GridView::handleClickedPoint(const QPointF& point)
         // if the point at closestIndex is a free node, we add the start here and the previous start becomes free
         if (freeNodesPoints.at(closestIndexPos) != nullQPoint)
         {
+            // Modyfing StartNode QScatter Series
             startNode->replace(previousStartNode, freeNodesPoints[closestIndexPos]);
             freeNodes->replace(freeNodesPoints[closestIndexPos], previousStartNode);
-        } else{ // if the point at closestIndex is an obstacle node, we add the start here and the previous start becomes obstacle
+
+            // Updating Starting point in backend grid
+            gridBackend.startIndex =
+
+            // Making sure the previous point is set as free in the backend grid
+            int previousStartIndex = gridBackend
+            gridBackend.gridPoints[previousStartIndex].obstacle = false;
+
+        } else{ // if the point at closestIndex is an obstacle node
+
+            // We add the starting point here and the previous start becomes an obstacle
             startNode->replace(previousStartNode, obstacleNodesPoints[closestIndexPos]);
             obstacleNodes->replace(obstacleNodesPoints[closestIndexPos], previousStartNode);
+
+            // Making sure the point is set as an obstacle in the backend grid
+
+
         }
     } else if (currentInteraction == END){
         QPointF previousEndNode = endNodePoint[0];
