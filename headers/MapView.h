@@ -1,5 +1,5 @@
-#ifndef GRIDVIEW_H
-#define GRIDVIEW_H
+#ifndef MAPVIEW_H
+#define MAPVIEW_H
 
 #include <QtCharts/QChartGlobal>
 #include <QtCharts/QChartView>
@@ -9,7 +9,7 @@
 QT_USE_NAMESPACE
 
 
-struct gridPoint
+struct gridNode
 {
     int xCoord, yCoord;
     bool visited = false; // false -> free, true -> seen
@@ -18,12 +18,12 @@ struct gridPoint
 
 struct grid
 {
-    std::vector<gridPoint> gridPoints;
+    std::vector<gridNode> gridNodes;
     int startIndex;
     int endIndex;
 };
 
-class GridView: public QChartView
+class MapView: public QChartView
 {
 
     Q_OBJECT
@@ -31,10 +31,10 @@ class GridView: public QChartView
     public:
 
         //Constructor
-        GridView(QChartView* parent=0);
+        MapView(QChartView* parent=0);
 
         // Destructor
-        virtual ~GridView();
+        virtual ~MapView();
 
         // Possible interactions in the chartview
         enum INTERACTIONS {START, END, OBSTACLE, NONE};
@@ -43,7 +43,7 @@ class GridView: public QChartView
         void setCurrentInteraction(int index);
 
         // getters: grid
-        std::vector<gridPoint> getGrid() const;
+        std::vector<gridNode> getGrid() const;
 
         // Methods
         QChart* createChart();
@@ -55,23 +55,23 @@ class GridView: public QChartView
     private:
 
         QChart* chart;
-        QScatterSeries *freeNodes;
-        QScatterSeries *obstacleNodes;
-        QScatterSeries *seenNodes;
-        QScatterSeries *startNode;
-        QScatterSeries *endNode;
+        QScatterSeries *freeElements;
+        QScatterSeries *obstacleElements;
+        QScatterSeries *seenElements;
+        QScatterSeries *startElement;
+        QScatterSeries *endElement;
 
-        QPointF startNodePoint;
-        QPointF endNodePoint;
+        QPointF startElementPoint;
+        QPointF endElementPoint;
 
         const int widthGrid = 10;
         const int heightGrid = 10;
 
         INTERACTIONS currentInteraction = NONE;
 
-        grid gridBackend;
+        grid gridMap;
 
 };
 
 
-#endif // GRIDVIEW_H
+#endif // MAPVIEW_H

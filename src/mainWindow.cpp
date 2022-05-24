@@ -2,7 +2,7 @@
 #include <QMessageBox>
 #include "headers\mainWindow.h"
 #include "ui_mainWindow.h"
-#include "headers\GridView.h"
+#include "headers\MapView.h"
 
 
 

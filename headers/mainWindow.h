@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <headers\GridView.h>
+#include <headers\MapView.h>
 
 
 QT_BEGIN_NAMESPACE
@@ -36,7 +36,7 @@ private slots:
 private:
 
         Ui::MainWindow* ui;
-        GridView gridView;
+        MapView gridView;
 
 };
 #endif // MAINWINDOW_H
