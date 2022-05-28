@@ -2,14 +2,12 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <headers\MapView.h>
+#include <headers\GridView.h>
 
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
-
-
 
 
 class MainWindow : public QMainWindow
@@ -20,6 +18,7 @@ class MainWindow : public QMainWindow
 
         // Constructor
         MainWindow(QWidget *parent = nullptr);
+
         // Destructor
         virtual ~MainWindow();
 
@@ -28,15 +27,15 @@ class MainWindow : public QMainWindow
         void setupAlgorithmsComboBox();
         void setupChartView(QString chartviewName);
 
-
 private slots:
-        void on_startButton_clicked();
+        void on_runButton_clicked();
+        void on_resetButton_clicked();
         void on_interactionBox_currentIndexChanged(int index);
 
 private:
 
         Ui::MainWindow* ui;
-        MapView gridView;
+        GridView gridView;
 
 };
 #endif // MAINWINDOW_H

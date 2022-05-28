@@ -36,12 +36,25 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QCommandLinkButton" name="startButton">
+       <widget class="QCommandLinkButton" name="runButton">
         <property name="enabled">
          <bool>true</bool>
         </property>
         <property name="text">
-         <string>Start</string>
+         <string>Run</string>
+        </property>
+        <property name="checkable">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCommandLinkButton" name="resetButton">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>Reset</string>
         </property>
        </widget>
       </item>
@@ -105,16 +118,6 @@
          </size>
         </property>
        </spacer>
-      </item>
-      <item>
-       <widget class="QCommandLinkButton" name="resetButton">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>Reset</string>
-        </property>
-       </widget>
       </item>
      </layout>
     </item>

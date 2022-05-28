@@ -9,14 +9,16 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    src\MapView.cpp \
-    src\main.cpp \
-    src\mainWindow.cpp \
+    src/GridView.cpp \
+    src/main.cpp \
+    src/mainWindow.cpp \
 
 
 HEADERS += \
-    headers\MapView.h \
-    headers\mainWindow.h \
+    headers/PathAlgorithm.h \
+    headers/GridView.h \
+    headers/mainWindow.h \
+
 
 FORMS += \
     mainWindow.ui

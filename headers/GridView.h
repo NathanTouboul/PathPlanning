@@ -1,5 +1,5 @@
-#ifndef MAPVIEW_H
-#define MAPVIEW_H
+#ifndef GRIDVIEW_H
+#define GRIDVIEW_H
 
 #include <QtCharts/QChartGlobal>
 #include <QtCharts/QChartView>
@@ -8,8 +8,13 @@
 #include <array>
 QT_USE_NAMESPACE
 
+// Possible interactions in the chartview
+typedef enum {START, END, OBSTACLE, RUNNING, NONE} INTERACTIONS;
 
-struct gridNode
+// Possible grid arrangement
+typedef enum {EMPTY, MAZE} ARRANGEMENTS;
+
+struct Node
 {
     int xCoord, yCoord;
     bool visited = false; // false -> free, true -> seen
@@ -18,12 +23,12 @@ struct gridNode
 
 struct grid
 {
-    std::vector<gridNode> gridNodes;
+    std::vector<Node> Nodes;
     int startIndex;
     int endIndex;
 };
 
-class MapView: public QChartView
+class GridView: public QChartView
 {
 
     Q_OBJECT
@@ -31,23 +36,23 @@ class MapView: public QChartView
     public:
 
         //Constructor
-        MapView(QChartView* parent=0);
+        GridView(QChartView* parent=0);
 
         // Destructor
-        virtual ~MapView();
-
-        // Possible interactions in the chartview
-        enum INTERACTIONS {START, END, OBSTACLE, NONE};
+        virtual ~GridView();
 
         // Setters: currentInteraction
         void setCurrentInteraction(int index);
 
         // getters: grid
-        std::vector<gridNode> getGrid() const;
+        grid* getGrid();
+        ARRANGEMENTS getCurrentArrangement() const;
 
         // Methods
         QChart* createChart();
         qreal computeDistanceBetweenPoints(const QPointF& pointA, const QPointF& pointB);
+        int coordToIndex(const QPointF& point);
+        void populateGridMap(ARRANGEMENTS arrangement);
 
     private Q_SLOTS:
         void handleClickedPoint(const QPointF& point);
@@ -61,17 +66,14 @@ class MapView: public QChartView
         QScatterSeries *startElement;
         QScatterSeries *endElement;
 
-        QPointF startElementPoint;
-        QPointF endElementPoint;
-
         const int widthGrid = 10;
         const int heightGrid = 10;
 
         INTERACTIONS currentInteraction = NONE;
-
-        grid gridMap;
+        ARRANGEMENTS currentArrangement = EMPTY;
+        grid gridNodes;
 
 };
 
 
-#endif // MAPVIEW_H
+#endif // GRIDVIEW_H

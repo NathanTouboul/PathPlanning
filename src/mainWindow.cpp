@@ -2,7 +2,7 @@
 #include <QMessageBox>
 #include "headers\mainWindow.h"
 #include "ui_mainWindow.h"
-#include "headers\MapView.h"
+#include "headers\GridView.h"
 
 
 
@@ -69,12 +69,17 @@ void MainWindow::setupChartView(QString chartviewName)
 
 }
 
-void MainWindow::on_startButton_clicked()
+void MainWindow::on_runButton_clicked()
 {
     if (ui->algorithmsBox->currentIndex() == -1)
     {
         QMessageBox::information(this, "Information", "Please select a path finding algorithm");
-    } else{
+    } else
+    {
+        // Setting the run button as checkble and checked
+        ui->runButton->setCheckable(true);
+        ui->runButton->setChecked(true);
+
         // call path finding
 
         // need to be updated at each steps
@@ -88,4 +93,10 @@ void MainWindow::on_interactionBox_currentIndexChanged(int index)
     gridView.setCurrentInteraction(index);
 }
 
+
+void MainWindow::on_resetButton_clicked()
+{
+    // Calling populate grid with same previous arrangement
+    gridView.populateGridMap(gridView.getCurrentArrangement());
+}
 

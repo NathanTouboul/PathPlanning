@@ -1,6 +1,7 @@
 #include <QApplication>
 #include "headers/mainWindow.h"
-#include "headers/MapView.h"
+#include "headers/GridView.h"
+#include "headers/PathAlgorithm.h"
 
 int main(int argc, char *argv[])
 {
