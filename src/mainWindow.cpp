@@ -1,24 +1,28 @@
+#include <iostream>
 #include <QChartView>
 #include <QMessageBox>
-#include "headers\mainWindow.h"
+
+#include "headers/mainWindow.h"
 #include "ui_mainWindow.h"
-#include "headers\GridView.h"
+#include "headers/GridView.h"
+#include "headers/PathAlgorithm.h"
 
-
-
-MainWindow::MainWindow(QWidget *parent): QMainWindow(parent),
-    ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent):
+    QMainWindow(parent),
+    ui(new Ui::MainWindow),
+    pathAlgorithm()
 {
+    // Setup of the window
     ui->setupUi(this);
+
+    // Setting up the chart view
+    setupGridView("gridView");
 
     // Setting up the Interaction Combo Box
     setupInteractionComboBox();
 
     // Setting up the Algorithms Combo Box
     setupAlgorithmsComboBox();
-
-    // Setting up the chart view
-    setupChartView("chartView");
 
 }
 
@@ -41,8 +45,6 @@ void MainWindow::setupInteractionComboBox()
 
     // Adding first interation: Add starting point
     ui->interactionBox->addItem("Add Obstacles");
-
-
 }
 
 void MainWindow::setupAlgorithmsComboBox()
@@ -52,21 +54,25 @@ void MainWindow::setupAlgorithmsComboBox()
 
     // Adding first interation: BFS
     ui->algorithmsBox->addItem("BFS");
-
 }
 
-void MainWindow::setupChartView(QString chartviewName)
+void MainWindow::setupGridView(QString gridViewName)
 {
 
     // Setting up chartview
-    ui->chartView->setObjectName(chartviewName);
-    ui->chartView->setMinimumWidth(qreal(200));
-    ui->chartView->setMinimumHeight(qreal(500));
+    ui->gridView->setObjectName(gridViewName);
+    ui->gridView->setMinimumWidth(qreal(200));
+    ui->gridView->setMinimumHeight(qreal(500));
 
     // Create Chart in chartview
     QChart* chart = gridView.createChart();
-    ui->chartView->setChart(chart);
+    ui->gridView->setChart(chart);
+}
 
+
+GridView& MainWindow::getGridView()
+{
+    return gridView;
 }
 
 void MainWindow::on_runButton_clicked()
@@ -80,12 +86,41 @@ void MainWindow::on_runButton_clicked()
         ui->runButton->setCheckable(true);
         ui->runButton->setChecked(true);
 
-        // call path finding
+        // Blocking the interaction with the gridView
+        gridView.setCurrentState(true);
 
-        // need to be updated at each steps
+        // Enabling the current QScatter series point as visible
+        gridView.AlgorithmView(true);
+
+        // call path finding
+        if (gridView.getCurrentAlgorithm() == BFS)
+        {
+            std::cerr <<"START INDEX BEFORE: " << gridView.getGrid().startIndex << "\n";
+            int moveCount = pathAlgorithm.bfsAlgorithm(&gridView);
+            std::cerr <<"START INDEX AFTER: " << gridView.getGrid().startIndex << "\n";
+
+        }
     }
+
+    if (gridView.getCurrentState() == true)
+    {
+        gridView.setCurrentState(false);
+        ui->runButton->setChecked(false);
+
+    }
+
+    // Disabling the current QScatter series point as visible
+    gridView.AlgorithmView(false);
+
+    std::cerr << "OUT OF BFS \n";
+
 }
 
+void MainWindow::on_resetButton_clicked()
+{
+    // Calling populate grid with same previous arrangement
+    gridView.populateGridMap(gridView.getCurrentArrangement());
+}
 
 void MainWindow::on_interactionBox_currentIndexChanged(int index)
 {
@@ -93,10 +128,10 @@ void MainWindow::on_interactionBox_currentIndexChanged(int index)
     gridView.setCurrentInteraction(index);
 }
 
-
-void MainWindow::on_resetButton_clicked()
+void MainWindow::on_algorithmsBox_currentIndexChanged(int index)
 {
-    // Calling populate grid with same previous arrangement
-    gridView.populateGridMap(gridView.getCurrentArrangement());
+    // Changing the current Algorithm
+    gridView.setCurrentAlgorithm(index);
+
 }
 

@@ -10,13 +10,14 @@ CONFIG += c++17
 
 SOURCES += \
     src/GridView.cpp \
+    src/PathAlgorithm.cpp \
     src/main.cpp \
     src/mainWindow.cpp \
 
 
 HEADERS += \
-    headers/PathAlgorithm.h \
     headers/GridView.h \
+    headers/PathAlgorithm.h \
     headers/mainWindow.h \
 
 

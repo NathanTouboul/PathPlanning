@@ -2,8 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <headers\GridView.h>
-
+#include <headers/GridView.h>
+#include <headers/PathAlgorithm.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -25,17 +25,21 @@ class MainWindow : public QMainWindow
         // Setting up objects
         void setupInteractionComboBox();
         void setupAlgorithmsComboBox();
-        void setupChartView(QString chartviewName);
+        void setupGridView(QString gridViewName);
+
+        // Getters
+        GridView& getGridView();
 
 private slots:
         void on_runButton_clicked();
         void on_resetButton_clicked();
         void on_interactionBox_currentIndexChanged(int index);
+        void on_algorithmsBox_currentIndexChanged(int index);
 
 private:
 
         Ui::MainWindow* ui;
         GridView gridView;
-
+        PathAlgorithm pathAlgorithm;
 };
 #endif // MAINWINDOW_H

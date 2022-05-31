@@ -1,7 +1,7 @@
 #ifndef PATHALGORITHM_H
 #define PATHALGORITHM_H
 
-typedef enum {BFS} algos;
+#include "headers/GridView.h"
 
 class PathAlgorithm
 {
@@ -13,14 +13,17 @@ class PathAlgorithm
         //Destructor
         virtual ~PathAlgorithm();
 
-        //Setters
-        void setCurretAlgorithm();
+        //Getters: current Algorithm from gridView
+        ALGOS getCurrentAlgorithm() const;
 
-        //Getters
-        algos getCurrentAlgorithm() const;
+        // Methods
+        int bfsAlgorithm(GridView* gridView);
+
+        // Retrieving the neighbors of a point in the grid
+        std::vector<Node> retrieveNeighborsGrid(const grid* gridNodes, const Node& currentNode, int heightGrid);
 
     private:
-
+        ALGOS currentAlgorithm;
 };
 
 #endif // PATHALGORITHM_H
