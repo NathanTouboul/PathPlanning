@@ -4,12 +4,19 @@
 #include <map>
 #include <unistd.h>
 
+#include <QtConcurrent>
+#include <QFuture>
+
 //Constructor
-PathAlgorithm::PathAlgorithm(){}
+PathAlgorithm::PathAlgorithm(QObject* parent): QObject (parent)
+{
+
+}
 
 //Destructor
 PathAlgorithm::~PathAlgorithm()
 {
+
 }
 
 //Getters: current Algorithm from gridView
@@ -18,15 +25,21 @@ ALGOS PathAlgorithm::getCurrentAlgorithm() const
     return currentAlgorithm;
 }
 
-// Methods
-int PathAlgorithm::bfsAlgorithm(GridView* gridView)
+void PathAlgorithm::runBFS(grid gridNodes)
 {
-    // Grid
-    grid& gridNodes = gridView->getGrid();
 
-    // Height grid
-    int heightGrid = gridView->getHeightGrid();
+    qInfo() << "Run BFS on" << QThread::currentThread();
+    QFuture<int> futureOutput = QtConcurrent::run(this, &PathAlgorithm::performBfsAlgorithm, 5);
 
+
+}
+
+// Methods
+int PathAlgorithm::performBfsAlgorithm(int index)
+{
+
+    //hardcoded
+    int heightGrid = 10;
 
     // Reach the goal
     bool reachEnd = false;
@@ -54,9 +67,8 @@ int PathAlgorithm::bfsAlgorithm(GridView* gridView)
         int currentIndex = coordToIndex(currentNode.xCoord, currentNode.yCoord, heightGrid);
 
         // Update current in the gridView
-        gridView->updateGridView(CURRENT, currentIndex);
+        //gridView->updateGridView(CURRENT, currentIndex);
 
-        return -1;
         if (currentIndex == gridNodes.endIndex)
         {
             reachEnd = true;
@@ -69,7 +81,8 @@ int PathAlgorithm::bfsAlgorithm(GridView* gridView)
             currentNode.visited = true;
 
             // Update this node as visited in the gridView
-            gridView->updateGridView(VISIT, currentIndex);
+            emit updatedgridView(VISIT, currentIndex);
+
 
             // Retrieve neighbors and pushing it to the next nodes to check
             std::vector<Node> neighbors = retrieveNeighborsGrid(&gridNodes, currentNode, heightGrid);
@@ -104,8 +117,6 @@ int PathAlgorithm::bfsAlgorithm(GridView* gridView)
 
         // Time and checking for stop from running button
         sleep(1);
-        std::cerr << "Current state " << std::boolalpha << gridView->getCurrentState() << "\n";
-        if (gridView->getCurrentState() == false) {return -1;}
 
     }
 

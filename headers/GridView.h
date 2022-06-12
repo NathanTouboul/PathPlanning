@@ -5,9 +5,8 @@
 #include <QtCharts/QChartView>
 #include <QtCharts/QScatterSeries>
 #include <QGridLayout>
-
+#include <QObject>
 #include <array>
-
 
 QT_USE_NAMESPACE
 
@@ -33,8 +32,11 @@ struct Node
 };
 
 // Grid structure
-struct grid
+struct grid //: public QObject
 {
+    //Q_OBJECT
+
+    public:
     std::vector<Node> Nodes;
     int startIndex;
     int endIndex;
@@ -54,7 +56,7 @@ class GridView: public QChartView
     public:
 
         //Constructor
-        GridView(QChartView* parent=0);
+        explicit GridView(QChartView* parent=0);
 
         // Destructor
         virtual ~GridView();
@@ -87,16 +89,11 @@ class GridView: public QChartView
         // Getter: height grid
         int getHeightGrid() const;
 
-        // Methods:
-
         // Create the chart and the grid
         QChart* createChart();
 
         // Populating the grid with points, depending on the arrangement selected
         void populateGridMap(ARRANGEMENTS arrangement);
-
-        // Updating the grid
-        void updateGridView(UPDATETYPES updateType, int updateIndex);
 
         // Computing the distance between two points
         qreal computeDistanceBetweenPoints(const QPointF& pointA, const QPointF& pointB);
@@ -104,10 +101,34 @@ class GridView: public QChartView
         // Setup view for algorithm
         void AlgorithmView(bool on);
 
-    private Q_SLOTS:
+        // Updating the grid
+        //bool updateGridView(UPDATETYPES updateType, int updateIndex);
+
+        // Method to find neighbors of a node
+        std::vector<Node> retrieveNeighborsGrid(const grid* gridNodes, const Node& currentNode, int heightGrid);
+
+
+    public Q_SLOTS:
+
+        // Event handleClickedPoint
         void handleClickedPoint(const QPointF& point);
 
-    private:
+        // Handles the changes in the gridView by the path planning algorithm
+        bool handleUpdatedgridView(UPDATETYPES updateType, int updateIndex);
+
+        // Event lauch BFS
+        //void launchEventBFS();
+
+
+    //public: Q_SIGNALS:
+      //  void updatedgridView(UPDATETYPES VISIT, int currentIndex);
+
+    public:
+        // Launching BFS -> multithreading it
+        //grid* launchingEventBFS(grid grid);
+        void launchingEventBFS();
+
+    public:
 
         QChart* chart;
 

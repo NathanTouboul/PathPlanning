@@ -1,14 +1,20 @@
 #ifndef PATHALGORITHM_H
 #define PATHALGORITHM_H
+#include <QObject>
+#include <QDebug>
 
+#include <QtConcurrent>
+#include <QFuture>
 #include "headers/GridView.h"
 
-class PathAlgorithm
+class PathAlgorithm : public QObject
 {
+
+    Q_OBJECT
     public:
 
         //Constructor
-        PathAlgorithm();
+        explicit PathAlgorithm(QObject* parent = nullptr);
 
         //Destructor
         virtual ~PathAlgorithm();
@@ -16,14 +22,22 @@ class PathAlgorithm
         //Getters: current Algorithm from gridView
         ALGOS getCurrentAlgorithm() const;
 
-        // Methods
-        int bfsAlgorithm(GridView* gridView);
+        void runBFS(grid gridNodes);
 
-        // Retrieving the neighbors of a point in the grid
+    public: Q_SIGNALS:
+        void updatedgridView(UPDATETYPES VISIT, int currentIndex);
+
+    public:
+        int performBfsAlgorithm(int index);
+
+        // Retrieving the neighbors of a point in a grid
         std::vector<Node> retrieveNeighborsGrid(const grid* gridNodes, const Node& currentNode, int heightGrid);
 
+        grid gridNodes;
     private:
         ALGOS currentAlgorithm;
+
+
 };
 
 #endif // PATHALGORITHM_H

@@ -5,12 +5,9 @@
 #include "headers/mainWindow.h"
 #include "ui_mainWindow.h"
 #include "headers/GridView.h"
-#include "headers/PathAlgorithm.h"
 
-MainWindow::MainWindow(QWidget *parent):
-    QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    pathAlgorithm()
+
+MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWindow), pathAlgorithm()
 {
     // Setup of the window
     ui->setupUi(this);
@@ -24,6 +21,11 @@ MainWindow::MainWindow(QWidget *parent):
     // Setting up the Algorithms Combo Box
     setupAlgorithmsComboBox();
 
+    // Connect Window and Gridview through dataChanged
+    //connect(this, &MainWindow::launchedBFS, &gridView, &GridView::launchEventBFS);
+
+    // A change in the grid view create a change in the chartview
+    connect(&pathAlgorithm, &PathAlgorithm::updatedgridView, &gridView, &GridView::handleUpdatedgridView);
 }
 
 MainWindow::~MainWindow()
@@ -69,7 +71,6 @@ void MainWindow::setupGridView(QString gridViewName)
     ui->gridView->setChart(chart);
 }
 
-
 GridView& MainWindow::getGridView()
 {
     return gridView;
@@ -77,11 +78,10 @@ GridView& MainWindow::getGridView()
 
 void MainWindow::on_runButton_clicked()
 {
-    if (ui->algorithmsBox->currentIndex() == -1)
-    {
+    if (ui->algorithmsBox->currentIndex() == -1){
         QMessageBox::information(this, "Information", "Please select a path finding algorithm");
-    } else
-    {
+    }else{
+
         // Setting the run button as checkble and checked
         ui->runButton->setCheckable(true);
         ui->runButton->setChecked(true);
@@ -92,13 +92,15 @@ void MainWindow::on_runButton_clicked()
         // Enabling the current QScatter series point as visible
         gridView.AlgorithmView(true);
 
-        // call path finding
+
+        // Call path finding
         if (gridView.getCurrentAlgorithm() == BFS)
         {
-            std::cerr <<"START INDEX BEFORE: " << gridView.getGrid().startIndex << "\n";
-            int moveCount = pathAlgorithm.bfsAlgorithm(&gridView);
-            std::cerr <<"START INDEX AFTER: " << gridView.getGrid().startIndex << "\n";
 
+            // BFS multithreading
+            //QFuture<int> futureOutput = QtConcurrent::run(this->pathAlgorithm, &PathAlgorithm::performBfsAlgorithm, gridView.getGrid());
+
+            pathAlgorithm.runBFS(gridView.getGrid());
         }
     }
 
@@ -112,7 +114,6 @@ void MainWindow::on_runButton_clicked()
     // Disabling the current QScatter series point as visible
     gridView.AlgorithmView(false);
 
-    std::cerr << "OUT OF BFS \n";
 
 }
 
@@ -120,6 +121,7 @@ void MainWindow::on_resetButton_clicked()
 {
     // Calling populate grid with same previous arrangement
     gridView.populateGridMap(gridView.getCurrentArrangement());
+
 }
 
 void MainWindow::on_interactionBox_currentIndexChanged(int index)
@@ -132,6 +134,6 @@ void MainWindow::on_algorithmsBox_currentIndexChanged(int index)
 {
     // Changing the current Algorithm
     gridView.setCurrentAlgorithm(index);
-
 }
+
 

@@ -1,4 +1,4 @@
-QT      += charts core gui
+QT      += charts core gui concurrent
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -12,13 +12,13 @@ SOURCES += \
     src/GridView.cpp \
     src/PathAlgorithm.cpp \
     src/main.cpp \
-    src/mainWindow.cpp \
+    src/mainWindow.cpp
 
 
 HEADERS += \
     headers/GridView.h \
     headers/PathAlgorithm.h \
-    headers/mainWindow.h \
+    headers/mainWindow.h
 
 
 FORMS += \
