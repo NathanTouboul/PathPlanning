@@ -28,7 +28,7 @@ class PathAlgorithm : public QObject
         void updatedgridView(UPDATETYPES VISIT, int currentIndex);
 
     public:
-        int performBfsAlgorithm(int index);
+        grid performBfsAlgorithm(grid gridNodes);
 
         // Retrieving the neighbors of a point in a grid
         std::vector<Node> retrieveNeighborsGrid(const grid* gridNodes, const Node& currentNode, int heightGrid);

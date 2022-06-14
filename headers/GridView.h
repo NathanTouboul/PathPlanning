@@ -101,9 +101,6 @@ class GridView: public QChartView
         // Setup view for algorithm
         void AlgorithmView(bool on);
 
-        // Updating the grid
-        //bool updateGridView(UPDATETYPES updateType, int updateIndex);
-
         // Method to find neighbors of a node
         std::vector<Node> retrieveNeighborsGrid(const grid* gridNodes, const Node& currentNode, int heightGrid);
 

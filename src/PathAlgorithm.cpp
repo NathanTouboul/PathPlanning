@@ -29,13 +29,12 @@ void PathAlgorithm::runBFS(grid gridNodes)
 {
 
     qInfo() << "Run BFS on" << QThread::currentThread();
-    QFuture<int> futureOutput = QtConcurrent::run(this, &PathAlgorithm::performBfsAlgorithm, 5);
-
-
+    QFuture<grid> futureOutput = QtConcurrent::run(&PathAlgorithm::performBfsAlgorithm, this, gridNodes);
+    //performBfsAlgorithm(gridNodes);
 }
 
 // Methods
-int PathAlgorithm::performBfsAlgorithm(int index)
+grid PathAlgorithm::performBfsAlgorithm(grid gridNodes)
 {
 
     //hardcoded
@@ -121,15 +120,7 @@ int PathAlgorithm::performBfsAlgorithm(int index)
     }
 
     // Return -1 if goal not reached
-    if (!reachEnd){return -1;}
 
-    // Reversing the path -> needs to clear the gridview first
-
-    // Using the seen nodes and a line to indicate the path
-
-
-    // Return the number of move counts
-    return moveCount;
 }
 
 std::vector<Node> PathAlgorithm::retrieveNeighborsGrid(const grid* gridNodes, const Node& currentNode, int heightGrid)

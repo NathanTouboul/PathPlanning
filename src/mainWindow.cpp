@@ -96,10 +96,6 @@ void MainWindow::on_runButton_clicked()
         // Call path finding
         if (gridView.getCurrentAlgorithm() == BFS)
         {
-
-            // BFS multithreading
-            //QFuture<int> futureOutput = QtConcurrent::run(this->pathAlgorithm, &PathAlgorithm::performBfsAlgorithm, gridView.getGrid());
-
             pathAlgorithm.runBFS(gridView.getGrid());
         }
     }
