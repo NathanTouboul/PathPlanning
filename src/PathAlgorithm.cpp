@@ -7,6 +7,9 @@
 #include <QtConcurrent>
 #include <QFuture>
 
+
+static int countLauchBFS{};
+
 //Constructor
 PathAlgorithm::PathAlgorithm(QObject* parent): QObject (parent)
 {
@@ -28,17 +31,40 @@ ALGOS PathAlgorithm::getCurrentAlgorithm() const
 void PathAlgorithm::runBFS(grid gridNodes)
 {
 
-    qInfo() << "Run BFS on" << QThread::currentThread();
-    QFuture<grid> futureOutput = QtConcurrent::run(&PathAlgorithm::performBfsAlgorithm, this, gridNodes);
-    //performBfsAlgorithm(gridNodes);
+    //qInfo() << "Run BFS on" << QThread::currentThread();
+    //QFuture<grid> futureOutput = QtConcurrent::run(&PathAlgorithm::performBfsAlgorithm, this, gridNodes);
+    performBfsAlgorithm(gridNodes);
 }
 
 // Methods
 grid PathAlgorithm::performBfsAlgorithm(grid gridNodes)
 {
 
+    countLauchBFS++; std::cerr << countLauchBFS << " - ";
     //hardcoded
     int heightGrid = 10;
+
+    // Display grid
+    std::cerr << "State of grid node \n";
+    int countVisited{}; int countObstacle{}; int countFree{};
+    for (int i = 0; gridNodes.Nodes.size(); i++)
+    {
+        if (i % heightGrid == 0){std::cerr << "\n";}else{std::cerr << " - ";}
+
+        std::cerr << "(" << gridNodes.Nodes[i].xCoord << ", " <<  gridNodes.Nodes[i].yCoord << ")";
+
+        if (gridNodes.Nodes[i].visited){std::cerr << ": V"; countVisited++;}
+
+        if (gridNodes.Nodes[i].obstacle){std::cerr << ": O"; countObstacle++;}
+            else{std::cerr << ": F"; countFree++;}
+
+    }
+    std::cerr << "Totals: " << "Visited: " << countVisited
+                            << "Obstacles: " << countObstacle
+                            << "Free:" << countFree;
+
+
+    return gridNodes;
 
     // Reach the goal
     bool reachEnd = false;
