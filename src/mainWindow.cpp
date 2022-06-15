@@ -85,13 +85,13 @@ void MainWindow::on_runButton_clicked()
         // Setting the run button as checkble and checked
         ui->runButton->setCheckable(true);
         ui->runButton->setChecked(true);
+        ui->runButton->setText(QString("PAUSE"));
 
         // Blocking the interaction with the gridView
         gridView.setCurrentState(true);
 
         // Enabling the current QScatter series point as visible
         gridView.AlgorithmView(true);
-
 
         // Call path finding
         if (gridView.getCurrentAlgorithm() == BFS)
@@ -109,7 +109,6 @@ void MainWindow::on_runButton_clicked()
 
     // Disabling the current QScatter series point as visible
     gridView.AlgorithmView(false);
-
 
 }
 

@@ -66,7 +66,8 @@ grid PathAlgorithm::performBfsAlgorithm(grid gridNodes)
         int currentIndex = coordToIndex(currentNode.xCoord, currentNode.yCoord, heightGrid);
 
         // Update current in the gridView
-        //gridView->updateGridView(CURRENT, currentIndex);
+        emit updatedgridView(CURRENT, currentIndex);
+
 
         if (currentIndex == gridNodes.endIndex)
         {
@@ -115,7 +116,7 @@ grid PathAlgorithm::performBfsAlgorithm(grid gridNodes)
         std::cerr << "CURRENT NODE INDEX: " <<currentIndex << "\n";
 
         // Time and checking for stop from running button
-        sleep(1);
+        sleep(2);
 
     }
 

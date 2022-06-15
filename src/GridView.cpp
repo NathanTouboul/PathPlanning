@@ -392,15 +392,11 @@ int coordToIndex(int x, int y,  int heightGrid)
 
 void GridView::AlgorithmView(bool on)
 {
-    if (on)
-    {
+    if (on){
         currentElement->setPointsVisible(true);
     }else{
         currentElement->setPointsVisible(false);
-
     }
-
-    //QtConcurrent::run(this, &GridView::launchingEventBFS);
 
 }
 
@@ -414,42 +410,52 @@ bool GridView::handleUpdatedgridView(UPDATETYPES updateType, int updateIndex)
     if (updateType == CURRENT)
     {
         currentElement->setPointsVisible();
-        if (updateIndex == gridNodes.startIndex){
+        if (updateIndex == gridNodes.startIndex){                   // Current node is the start point
 
             // Retrieving the current point coordinates
-            QPointF currentPoint = startElement->points()[0];
+            QList<QPointF> startElementsPoints = startElement->points();
+            QPointF currentPoint = startElementsPoints[0];
 
             startElement->replace(currentPoint, QPointF());
             currentElement->replace(0, currentPoint);
         }
-        else if (gridNodes.Nodes[updateIndex].obstacle == false){ // Current node is free
 
-            // Retrieving the current point coordinates
-            QPointF currentPoint = freeElements->points()[updateIndex];
-            freeElements->replace(updateIndex, QPointF());
-            currentElement->replace(0, currentPoint);
+        if (gridNodes.Nodes[updateIndex].visited == false)
+        {
 
+            if (gridNodes.Nodes[updateIndex].obstacle == false){   // Current node is free
 
-        }else{  // Current node is an obstacle
+                // Retrieving the current point coordinates
+                QList<QPointF> freeElementsPoints = freeElements->points();
+                QPointF currentPoint = freeElementsPoints[updateIndex];
 
-            // Retrieving the current point coordinates
-            QPointF currentPoint = obstacleElements->points()[updateIndex];
-            obstacleElements->replace(updateIndex, QPointF());
-            currentElement->replace(0, currentPoint);
+                freeElements->replace(updateIndex, QPointF());
+                currentElement->replace(0, currentPoint);
+
+            }else{  // Current node is an obstacle
+
+                // Retrieving the current point coordinates
+                QList<QPointF> obstacleElementsPoints = obstacleElements->points();
+                QPointF currentPoint = obstacleElementsPoints[updateIndex];
+
+                obstacleElements->replace(updateIndex, QPointF());
+                currentElement->replace(0, currentPoint);
+            }
+
         }
 
 
     }else if(updateType == VISIT)
     {
         // Current node is (must be) free
-        QPointF visitedPoint = freeElements->points()[updateIndex];
+        QList<QPointF> freeElementsPoints = freeElements->points();
+        QPointF visitedPoint = freeElementsPoints[updateIndex];
 
         freeElements->replace(updateIndex, QPointF());
         visitedElements->replace(updateIndex, visitedPoint);
     }
 
     update();
-    std::cerr << "View updated \n";
 
     return true;
 

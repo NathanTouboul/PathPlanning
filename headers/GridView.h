@@ -113,16 +113,8 @@ class GridView: public QChartView
         // Handles the changes in the gridView by the path planning algorithm
         bool handleUpdatedgridView(UPDATETYPES updateType, int updateIndex);
 
-        // Event lauch BFS
-        //void launchEventBFS();
-
-
-    //public: Q_SIGNALS:
-      //  void updatedgridView(UPDATETYPES VISIT, int currentIndex);
-
     public:
-        // Launching BFS -> multithreading it
-        //grid* launchingEventBFS(grid grid);
+        // Launching BFS multi threaded
         void launchingEventBFS();
 
     public:
