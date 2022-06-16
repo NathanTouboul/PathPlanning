@@ -8,6 +8,7 @@
 
 #include <queue>
 #include <unistd.h>
+#include <QTest>
 
 // Constructor
 GridView::GridView(QChartView* parent): QChartView(parent)
@@ -183,6 +184,11 @@ void GridView::populateGridMap(ARRANGEMENTS arrangement)
 
     // Setting up the current index
     gridNodes.currentIndex = gridNodes.startIndex;
+
+    // Check size of vector
+    if (static_cast<int>(gridNodes.Nodes.size()) != static_cast<int>(this->heightGrid * this->widthGrid))
+    {std::cerr << "Number of nodes in gridNodes issue: " << gridNodes.Nodes.size() << " vs " << this->heightGrid * this->widthGrid << " [ISSUE] \n";}
+
 }
 
 // Creating the QChart

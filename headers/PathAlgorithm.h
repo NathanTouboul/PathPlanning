@@ -1,4 +1,4 @@
-#ifndef PATHALGORITHM_H
+    #ifndef PATHALGORITHM_H
 #define PATHALGORITHM_H
 #include <QObject>
 #include <QDebug>

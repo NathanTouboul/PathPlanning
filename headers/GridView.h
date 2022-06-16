@@ -37,7 +37,7 @@ struct grid //: public QObject
     //Q_OBJECT
 
     public:
-    std::vector<Node> Nodes;
+    std::vector<Node> Nodes; // Need to be a vector since we will give the user the choice of number of nodes
     int startIndex;
     int endIndex;
     int currentIndex;
