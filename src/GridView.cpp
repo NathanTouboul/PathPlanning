@@ -126,21 +126,23 @@ int GridView::getHeightGrid() const
 void GridView::populateGridMap(ARRANGEMENTS arrangement)
 {
     std::cerr << "Populating the grid in the chart \n";
+
     if (arrangement == EMPTY)
     {
         // Setting Default start and end points
         startElement->replace(0, QPointF(1, heightGrid));
         endElement->replace(0, QPointF(widthGrid, 1));
 
-        qreal x{1};
         // Index for gridPoint Vector
         int indexGrid{};
 
+        qreal y{1};
         // Populating the grid with elements
-        for (int i=1;  i <= this->widthGrid; i++){
+        for (int j=1;  j <= this->heightGrid; j++)
+        {
 
-            qreal y{1};
-            for (int j=1;  j <= this->heightGrid; j++)
+            qreal x{1};
+            for (int i=1;  i <= this->widthGrid; i++)
             {
                 if (i == startElement->points()[0].x() && j == startElement->points()[0].y()){
 
@@ -166,16 +168,17 @@ void GridView::populateGridMap(ARRANGEMENTS arrangement)
                 // Populating the backend grid with the point (including start and end)
                 gridNodes.Nodes.push_back(gridNodeBackend);
 
-                y++;
+                x++;
                 indexGrid++;
 
-                // Deleting the obstacle if present
+                // Deleting the obstacle if present (useful for reset)
                 if (gridNodes.Nodes[indexGrid].obstacle == true)
                 {
                     obstacleElements->replace(indexGrid, QPointF());
                 }
+
             }
-            x++;
+            y++;
         }
     }else{
 
@@ -186,8 +189,7 @@ void GridView::populateGridMap(ARRANGEMENTS arrangement)
     gridNodes.currentIndex = gridNodes.startIndex;
 
     // Check size of vector
-    if (static_cast<int>(gridNodes.Nodes.size()) != static_cast<int>(this->heightGrid * this->widthGrid))
-    {std::cerr << "Number of nodes in gridNodes issue: " << gridNodes.Nodes.size() << " vs " << this->heightGrid * this->widthGrid << " [ISSUE] \n";}
+    std::cerr << "\nNumber of nodes in gridNodes: " << gridNodes.Nodes.size() << " vs " << this->heightGrid * this->widthGrid << "\n";
 
 }
 
@@ -218,6 +220,14 @@ QChart* GridView::createChart()
     startElement->setMarkerSize(markerSize);
     endElement->setMarkerSize(markerSize);
     currentElement->setMarkerSize(markerSize);
+
+    // Label Points
+    freeElements->setPointLabelsVisible();
+    obstacleElements->setPointLabelsVisible();
+    visitedElements->setPointLabelsVisible();
+    startElement->setPointLabelsVisible();
+    endElement->setPointLabelsVisible();
+    currentElement->setPointLabelsVisible();
 
     // Current QScatter Series point not visible until start of run
     currentElement->setPointsVisible(false);
@@ -405,7 +415,6 @@ void GridView::AlgorithmView(bool on)
     }
 
 }
-
 
 
 // Updating the view (for the path planning algorithms)

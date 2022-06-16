@@ -24,16 +24,16 @@ class PathAlgorithm : public QObject
 
         void runBFS(grid gridNodes);
 
-    public: Q_SIGNALS:
-        void updatedgridView(UPDATETYPES VISIT, int currentIndex);
-
-    public:
         grid performBfsAlgorithm(grid gridNodes);
 
         // Retrieving the neighbors of a point in a grid
         std::vector<Node> retrieveNeighborsGrid(const grid* gridNodes, const Node& currentNode, int heightGrid);
 
-        grid gridNodes;
+        void checkGridNode(grid gridNodes, int heightGrid, int widthGrid);
+
+    public: Q_SIGNALS:
+        void updatedgridView(UPDATETYPES VISIT, int currentIndex);
+
     private:
         ALGOS currentAlgorithm;
 

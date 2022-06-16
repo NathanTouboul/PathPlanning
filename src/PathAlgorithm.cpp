@@ -41,30 +41,12 @@ grid PathAlgorithm::performBfsAlgorithm(grid gridNodes)
 {
 
     countLauchBFS++; std::cerr << countLauchBFS << " - ";
+
     //hardcoded
-    int heightGrid = 10;
+    int heightGrid = 10; int widthGrid = 10;
 
     // Display grid
-    std::cerr << "State of grid node \n";
-    int countVisited{}; int countObstacle{}; int countFree{};
-    for (int i = 0; gridNodes.Nodes.size(); i++)
-    {
-        if (i % heightGrid == 0){std::cerr << "\n";}else{std::cerr << " - ";}
-
-        std::cerr << "(" << gridNodes.Nodes[i].xCoord << ", " <<  gridNodes.Nodes[i].yCoord << ")";
-
-        if (gridNodes.Nodes[i].visited){std::cerr << ": V"; countVisited++;}
-
-        if (gridNodes.Nodes[i].obstacle){std::cerr << ": O"; countObstacle++;}
-            else{std::cerr << ": F"; countFree++;}
-
-    }
-    std::cerr << "Totals: " << "Visited: " << countVisited
-                            << "Obstacles: " << countObstacle
-                            << "Free:" << countFree;
-
-
-    return gridNodes;
+    checkGridNode(gridNodes, heightGrid, widthGrid);
 
     // Reach the goal
     bool reachEnd = false;
@@ -87,6 +69,7 @@ grid PathAlgorithm::performBfsAlgorithm(grid gridNodes)
 
     while(!nextNodes.empty())
     {
+        std::cerr << "IN\n";
         // Current Node
         Node currentNode =  nextNodes.front(); nextNodes.pop();
         int currentIndex = coordToIndex(currentNode.xCoord, currentNode.yCoord, heightGrid);
@@ -97,6 +80,7 @@ grid PathAlgorithm::performBfsAlgorithm(grid gridNodes)
 
         if (currentIndex == gridNodes.endIndex)
         {
+            std::cerr << "Reached end \n";
             reachEnd = true;
             break;
         }
@@ -139,14 +123,18 @@ grid PathAlgorithm::performBfsAlgorithm(grid gridNodes)
         }
 
         std::cerr << "MOVE COUNT: " << moveCount << "\n";
-        std::cerr << "CURRENT NODE INDEX: " <<currentIndex << "\n";
+        std::cerr << "CURRENT NODE: (" << currentNode.xCoord << ", " << currentNode.yCoord << ") \n";
 
         // Time and checking for stop from running button
-        sleep(2);
+        sleep(1);
 
     }
 
-    // Return -1 if goal not reached
+    // Display grid
+    checkGridNode(gridNodes, heightGrid, widthGrid);
+
+
+    return gridNodes;
 
 }
 
@@ -154,7 +142,7 @@ std::vector<Node> PathAlgorithm::retrieveNeighborsGrid(const grid* gridNodes, co
 {
     std::vector<Node> neighbors;
 
-    // rigth: adding +1 to x:
+    // right: adding +1 to x:
     if (currentNode.xCoord + 1 <= gridNodes->Nodes[-1].xCoord)
     {
         int rightIndex = coordToIndex(currentNode.xCoord + 1, currentNode.yCoord, heightGrid);
@@ -168,7 +156,7 @@ std::vector<Node> PathAlgorithm::retrieveNeighborsGrid(const grid* gridNodes, co
         neighbors.push_back(gridNodes->Nodes[downIndex]);
     }
 
-    // rigth: adding -1 to x:
+    // left: adding -1 to x:
     if (currentNode.xCoord - 1 >= gridNodes->Nodes[0].xCoord)
     {
         int leftIndex = coordToIndex(currentNode.xCoord - 1, currentNode.yCoord, heightGrid);
@@ -183,4 +171,31 @@ std::vector<Node> PathAlgorithm::retrieveNeighborsGrid(const grid* gridNodes, co
     }
 
     return neighbors;
+}
+
+
+void PathAlgorithm::checkGridNode(grid gridNodes, int heightGrid, int widthGrid)
+{
+    // Display grid
+    std::cerr << "State of grid node \n";
+    int countVisited = 0; int countObstacle = 0; int countFree = 0;
+    for (Node node: gridNodes.Nodes)
+    {
+        std::cerr << "(" << node.xCoord << ", " <<  node.yCoord << "): ";
+
+        if (node.visited){std::cerr << ": V"; countVisited++;}
+
+        if (node.obstacle){std::cerr << ": O"; countObstacle++;}
+            else{std::cerr << ": F"; countFree++;}
+        std::cerr << " \n";
+    }
+    std::cerr << "Totals: " << "Visited: " << countVisited
+                            << " - Obstacles: " << countObstacle
+                            << " - Free:" << countFree << "\n";
+
+    // Check size of vector
+    if (static_cast<int>(gridNodes.Nodes.size()) != static_cast<int>(heightGrid * widthGrid))
+    {std::cerr << "Number of nodes in gridNodes: " << gridNodes.Nodes.size() << " vs " << heightGrid * widthGrid << " [ISSUE] \n";}
+    else{std::cerr << "Number of nodes in gridNodes: " << gridNodes.Nodes.size() << "\n";}
+
 }

@@ -21,9 +21,6 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
     // Setting up the Algorithms Combo Box
     setupAlgorithmsComboBox();
 
-    // Connect Window and Gridview through dataChanged
-    //connect(this, &MainWindow::launchedBFS, &gridView, &GridView::launchEventBFS);
-
     // A change in the grid view create a change in the chartview
     connect(&pathAlgorithm, &PathAlgorithm::updatedgridView, &gridView, &GridView::handleUpdatedgridView);
 }
