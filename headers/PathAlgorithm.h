@@ -24,13 +24,13 @@ class PathAlgorithm : public QObject
 
 
         // Running pausing and canceling algorithms
-        void runAlgorithm(grid gridNodes, ALGOS algorithm);
+        void runAlgorithm(ALGOS algorithm);
         void pauseAlgorithm();
         void resumeAlgorithm();
 
         // BFS Algorithm
-        void performBfsAlgorithm(QPromise<int>& promise);
-
+        void performBFSAlgorithm(QPromise<int>& promise);
+        void performDFSAlgorithm(QPromise<int>& promise);
 
         // Retrieving the neighbors of a point in a grid
         std::vector<Node> retrieveNeighborsGrid(const grid& gridNodes, const Node& currentNode, int widthGrid, int heightGrid);
@@ -50,6 +50,8 @@ class PathAlgorithm : public QObject
 
         // grid nodes manipulated by the path planning object
         grid gridNodes;
+        int heightGrid;
+        int widthGrid;
 
         // Multithreading
         QThreadPool pool;

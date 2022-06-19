@@ -141,8 +141,8 @@ class GridView: public QChartView
         QScatterSeries* endElement;
         QScatterSeries* currentElement;
 
-        int widthGrid = 10;
-        int heightGrid = 10;
+        int widthGrid = 15;
+        int heightGrid = 15;
         qreal markerSize = 30;
 
         INTERACTIONS currentInteraction;

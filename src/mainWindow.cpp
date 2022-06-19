@@ -99,7 +99,11 @@ void MainWindow::on_runButton_clicked()
     }else{
 
         pathAlgorithm.running = true;
+
+        // set the grid node of the path algorithm object;
         pathAlgorithm.gridNodes = gridView.gridNodes;
+        pathAlgorithm.heightGrid = gridView.heightGrid;
+        pathAlgorithm.widthGrid = gridView.widthGrid;
 
         // Setting the run button as checkble and checked
         ui->runButton->setCheckable(true);
@@ -113,7 +117,7 @@ void MainWindow::on_runButton_clicked()
         gridView.AlgorithmView(true);
 
         // Call path finding
-        pathAlgorithm.runAlgorithm(gridView.getGrid(), gridView.getCurrentAlgorithm());
+        pathAlgorithm.runAlgorithm(gridView.getCurrentAlgorithm());
 
     }
 

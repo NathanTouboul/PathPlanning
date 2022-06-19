@@ -7,7 +7,7 @@
 #include <thread>
 #include <QtConcurrent>
 #include <QFuture>
-
+#include <stack>
 
 static int countLauchBFS{};
 
@@ -34,20 +34,22 @@ ALGOS PathAlgorithm::getCurrentAlgorithm() const
     return currentAlgorithm;
 }
 
-void PathAlgorithm::runAlgorithm(grid gridNodes, ALGOS algorithm)
+void PathAlgorithm::runAlgorithm(ALGOS algorithm)
 {
     simulationOnGoing=true;
     running=true;
 
     qInfo() << "Run " << algorithm <<" on" << QThread::currentThread();
 
+    //futureOutput = QtConcurrent::run(&PathAlgorithm::performBfsAlgorithm, this, gridNodes);
 
     switch (algorithm) {
     case BFS:
-        //futureOutput = QtConcurrent::run(&PathAlgorithm::performBfsAlgorithm, this, gridNodes);
-        futureOutput = QtConcurrent::run(&pool, &PathAlgorithm::performBfsAlgorithm, this);
+        futureOutput = QtConcurrent::run(&pool, &PathAlgorithm::performBFSAlgorithm, this);
         break;
     case DFS:
+        futureOutput = QtConcurrent::run(&pool, &PathAlgorithm::performDFSAlgorithm, this);
+
         break;
     default:
         break;
@@ -68,22 +70,14 @@ void PathAlgorithm::pauseAlgorithm()
     futureOutput.suspend();
 }
 
-// Methods
-//grid PathAlgorithm::performBfsAlgorithm(grid gridNodes)
-
-void PathAlgorithm::performBfsAlgorithm(QPromise<int>& promise)
+// BFS Algorithm
+void PathAlgorithm::performBFSAlgorithm(QPromise<int>& promise)
 {
 
     // Allow to pause and stop the simulation (to debug)
     promise.suspendIfRequested();
     if (promise.isCanceled())
         return;
-
-
-    countLauchBFS++; std::cerr << countLauchBFS << " - ";
-
-    //hardcoded
-    int heightGrid = 10; int widthGrid = 10;
 
     // Display grid
     checkGridNode(gridNodes, heightGrid, widthGrid);
@@ -98,14 +92,10 @@ void PathAlgorithm::performBfsAlgorithm(QPromise<int>& promise)
     std::vector<Node> parentNodes = gridNodes.Nodes;
 
     // Initializing a vector of nodes (through copy of the original): to recreate the path: index: index parent, value: Node child
-
     std::vector<Node> pathNodes = gridNodes.Nodes;
 
     // Starting point
     nextNodes.push(gridNodes.Nodes[gridNodes.startIndex]);
-    std::cerr << "Start: (" << gridNodes.Nodes[gridNodes.startIndex].xCoord << ", " << gridNodes.Nodes[gridNodes.startIndex].yCoord << "): "
-               <<gridNodes.startIndex << "\n" ;
-
 
     // Keeping track of the number of nodes left to check in the next layer and in the current layer
     int nodesInNextLayer = 0;
@@ -120,8 +110,6 @@ void PathAlgorithm::performBfsAlgorithm(QPromise<int>& promise)
     while(!nextNodes.empty())
     {
 
-        std::cerr << "IN\n";
-
         // Current Node
         currentNode =  nextNodes.front(); nextNodes.pop();
         int currentIndex = coordToIndex(currentNode.xCoord, currentNode.yCoord, widthGrid);
@@ -135,8 +123,6 @@ void PathAlgorithm::performBfsAlgorithm(QPromise<int>& promise)
 
         if (currentNode.visited == false && currentNode.obstacle == false)
         {
-            std::cerr << "CURRENT NODE: (" << currentNode.xCoord << ", " << currentNode.yCoord << ") \n";
-            std::cerr << "Current index: " << currentIndex << "\n";
 
             // This node is now visited
             currentNode.visited = true;
@@ -152,8 +138,6 @@ void PathAlgorithm::performBfsAlgorithm(QPromise<int>& promise)
             {
                 // Pushing the neighbors in the next nodes to be checked if the node has not been added in the nextNode before
                 if ((*nextNode).nextUp == false){
-
-                    std::cerr << "Pushing the node in next: (" << (*nextNode).xCoord << ", " <<(*nextNode).yCoord << ")\n";
 
                     int nextIndex = coordToIndex((*nextNode).xCoord, (*nextNode).yCoord, widthGrid);
 
@@ -216,16 +200,13 @@ void PathAlgorithm::performBfsAlgorithm(QPromise<int>& promise)
             int reverseIndex = coordToIndex(reverse.xCoord, reverse.yCoord, widthGrid);
             Node parentNode = parentNodes[reverseIndex];
 
-
             emit updatedgridView(PATH, reverseIndex);
             reverse = parentNode;
-            std::cerr << "(" << reverse.xCoord << ", " << reverse.yCoord <<") - ";
             count++;
             std::this_thread::sleep_for(std::chrono::milliseconds(speedVisualization));
 
 
         }
-        std::cout << "\n";
 
     }else{
         endReached = false;
@@ -233,6 +214,146 @@ void PathAlgorithm::performBfsAlgorithm(QPromise<int>& promise)
 
 }
 
+// DFS Algorithm
+void PathAlgorithm::performDFSAlgorithm(QPromise<int>& promise)
+{
+
+    // Allow to pause and stop the simulation (to debug)
+    promise.suspendIfRequested();
+    if (promise.isCanceled())
+        return;
+
+    // Display grid
+    checkGridNode(gridNodes, heightGrid, widthGrid);
+
+    // Reach the goal
+    bool reachEnd = false;
+
+    // Initialize the queue of Nodes to visit in the next step
+    std::stack<Node> nextNodes;
+
+    // Initializing a vector of nodes (through copy of the original): to keep track of parents: index: index parent, value: Node child
+    std::vector<Node> parentNodes = gridNodes.Nodes;
+
+    // Initializing a vector of nodes (through copy of the original): to recreate the path: index: index parent, value: Node child
+    std::vector<Node> pathNodes = gridNodes.Nodes;
+
+    // Starting point
+    nextNodes.push(gridNodes.Nodes[gridNodes.startIndex]);
+
+    // Keeping track of the number of nodes left to check in the next layer and in the current layer
+    int nodesInNextLayer = 0;
+    int nodesLeftInCurrentLayer =1 ;
+
+    // Counting the optimal number of moves needed to go from start to finish
+    int moveCount {};
+
+    // Initialization current node
+    Node currentNode;
+
+    while(!nextNodes.empty())
+    {
+        // Current Node
+        currentNode =  nextNodes.top(); nextNodes.pop();
+        int currentIndex = coordToIndex(currentNode.xCoord, currentNode.yCoord, widthGrid);
+
+        if (currentIndex == gridNodes.endIndex)
+        {
+            std::cerr << "Reached end \n";
+            reachEnd = true;
+            break;
+        }
+
+        if (currentNode.visited == false && currentNode.obstacle == false)
+        {
+            // This node is now visited
+            currentNode.visited = true;
+            gridNodes.Nodes[currentIndex].visited = true;
+
+            // Update this node as visited in the gridView
+            emit updatedgridView(VISIT, currentIndex);
+
+            // Retrieve neighbors and pushing it to the next nodes to check
+            std::vector<Node> neighbors = retrieveNeighborsGrid(gridNodes, currentNode, widthGrid, heightGrid);
+
+            for (auto nextNode=neighbors.begin(); nextNode < neighbors.end(); nextNode++)
+            {
+                // Pushing the neighbors in the next nodes to be checked if the node has not been added in the nextNode before
+                if ((*nextNode).nextUp == false){
+
+                    int nextIndex = coordToIndex((*nextNode).xCoord, (*nextNode).yCoord, widthGrid);
+
+                    gridNodes.Nodes[nextIndex].nextUp = true;
+                    nextNodes.push(*nextNode);
+
+                    emit updatedgridView(NEXT, nextIndex);
+
+                    // Keeping track of the number of nodes in the next layers left to check
+                    nodesInNextLayer++;
+
+                    //Keeping track of parent node
+                    parentNodes[nextIndex] = currentNode;
+                    parentNodes[nextIndex].xCoord = currentNode.xCoord;
+                    parentNodes[nextIndex].yCoord = currentNode.yCoord;
+
+
+                }
+            }
+
+            // This node has been visited
+            nodesLeftInCurrentLayer--;
+
+            // Time and checking for stop from running button
+            std::this_thread::sleep_for(std::chrono::milliseconds(speedVisualization));
+
+        }
+
+        // if all nodes in the current layer have been checked
+        if (nodesLeftInCurrentLayer == 0)
+        {
+            nodesLeftInCurrentLayer = nodesInNextLayer;
+            nodesInNextLayer = 0;
+            moveCount++;
+        }
+
+        //std::cerr << "MOVE COUNT: " << moveCount << "\n";
+
+    }
+
+    // Display grid
+    checkGridNode(gridNodes, heightGrid, widthGrid);
+
+    // updating promise
+    promise.addResult(moveCount);
+
+    // If the end is reached, we output the path
+    if (reachEnd){
+
+        endReached = true;
+
+        Node goal = currentNode;
+        Node reverse = goal;
+
+        int count=0;
+        while(reverse.xCoord != gridNodes.Nodes[gridNodes.startIndex].xCoord || reverse.yCoord != gridNodes.Nodes[gridNodes.startIndex].yCoord)
+        {
+
+            int reverseIndex = coordToIndex(reverse.xCoord, reverse.yCoord, widthGrid);
+            Node parentNode = parentNodes[reverseIndex];
+
+            emit updatedgridView(PATH, reverseIndex);
+            reverse = parentNode;
+            count++;
+            std::this_thread::sleep_for(std::chrono::milliseconds(speedVisualization));
+
+
+        }
+
+    }else{
+        endReached = false;
+    }
+
+}
 std::vector<Node> PathAlgorithm::retrieveNeighborsGrid(const grid& gridNodes, const Node& currentNode, int widthGrid, int heightGrid)
 {
 
