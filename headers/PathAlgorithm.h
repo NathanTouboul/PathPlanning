@@ -1,4 +1,4 @@
-    #ifndef PATHALGORITHM_H
+#ifndef PATHALGORITHM_H
 #define PATHALGORITHM_H
 #include <QObject>
 #include <QDebug>
@@ -22,21 +22,38 @@ class PathAlgorithm : public QObject
         //Getters: current Algorithm from gridView
         ALGOS getCurrentAlgorithm() const;
 
-        void runBFS(grid gridNodes);
 
-        grid performBfsAlgorithm(grid gridNodes);
+        // Running pausing and canceling algorithms
+        void runAlgorithm(grid gridNodes, ALGOS algorithm);
+        void pauseAlgorithm();
+        void resumeAlgorithm();
+
+        // BFS Algorithm
+        void performBfsAlgorithm(QPromise<int>& promise);
+
 
         // Retrieving the neighbors of a point in a grid
-        std::vector<Node> retrieveNeighborsGrid(const grid* gridNodes, const Node& currentNode, int heightGrid);
+        std::vector<Node> retrieveNeighborsGrid(const grid& gridNodes, const Node& currentNode, int widthGrid, int heightGrid);
 
         void checkGridNode(grid gridNodes, int heightGrid, int widthGrid);
 
     public: Q_SIGNALS:
         void updatedgridView(UPDATETYPES VISIT, int currentIndex);
 
-    private:
-        ALGOS currentAlgorithm;
+    public:
 
+        ALGOS currentAlgorithm;
+        bool running;
+        bool simulationOnGoing;
+        bool endReached;
+        int speedVisualization;
+
+        // grid nodes manipulated by the path planning object
+        grid gridNodes;
+
+        // Multithreading
+        QThreadPool pool;
+        QFuture<int> futureOutput;
 
 };
 

@@ -53,6 +53,8 @@ void MainWindow::setupAlgorithmsComboBox()
 
     // Adding first interation: BFS
     ui->algorithmsBox->addItem("BFS");
+    ui->algorithmsBox->addItem("DFS");
+
 }
 
 void MainWindow::setupGridView(QString gridViewName)
@@ -77,7 +79,27 @@ void MainWindow::on_runButton_clicked()
 {
     if (ui->algorithmsBox->currentIndex() == -1){
         QMessageBox::information(this, "Information", "Please select a path finding algorithm");
+
+    }else if (pathAlgorithm.simulationOnGoing){
+
+        if (pathAlgorithm.running){
+            pathAlgorithm.pauseAlgorithm();
+            gridView.setCurrentState(false);
+            ui->runButton->setChecked(false);
+            ui->runButton->setText(QString("RUN"));
+
+        }else{
+            pathAlgorithm.resumeAlgorithm();
+            gridView.setCurrentState(true);
+
+            ui->runButton->setChecked(true);
+            ui->runButton->setText(QString("PAUSE"));
+        }
+
     }else{
+
+        pathAlgorithm.running = true;
+        pathAlgorithm.gridNodes = gridView.gridNodes;
 
         // Setting the run button as checkble and checked
         ui->runButton->setCheckable(true);
@@ -91,21 +113,12 @@ void MainWindow::on_runButton_clicked()
         gridView.AlgorithmView(true);
 
         // Call path finding
-        if (gridView.getCurrentAlgorithm() == BFS)
-        {
-            pathAlgorithm.runBFS(gridView.getGrid());
-        }
-    }
-
-    if (gridView.getCurrentState() == true)
-    {
-        gridView.setCurrentState(false);
-        ui->runButton->setChecked(false);
+        pathAlgorithm.runAlgorithm(gridView.getGrid(), gridView.getCurrentAlgorithm());
 
     }
 
     // Disabling the current QScatter series point as visible
-    gridView.AlgorithmView(false);
+    //gridView.AlgorithmView(false);
 
 }
 
@@ -120,6 +133,7 @@ void MainWindow::on_interactionBox_currentIndexChanged(int index)
 {
     // Updating the current interaction chosen by the user
     gridView.setCurrentInteraction(index);
+
 }
 
 void MainWindow::on_algorithmsBox_currentIndexChanged(int index)

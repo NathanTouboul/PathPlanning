@@ -19,12 +19,15 @@ GridView::GridView(QChartView* parent): QChartView(parent)
     chart = new QChart();
 
     // New Series of Elements: free, obstacle, seen, start and goal
-    freeElements = new QScatterSeries();
-    obstacleElements = new QScatterSeries();
-    visitedElements = new QScatterSeries();
-    startElement = new QScatterSeries();
-    endElement = new QScatterSeries();
-    currentElement = new QScatterSeries();
+    freeElements        = new QScatterSeries();
+    obstacleElements    = new QScatterSeries();
+    visitedElements     = new QScatterSeries();
+    nextElements        = new QScatterSeries();
+    pathElements        = new QScatterSeries();
+
+    startElement        = new QScatterSeries();
+    endElement          = new QScatterSeries();
+    currentElement      = new QScatterSeries();
 
     // Inserting points in the series
     for (int i = 0; i < heightGrid * widthGrid; i++)
@@ -32,6 +35,9 @@ GridView::GridView(QChartView* parent): QChartView(parent)
         freeElements->append(QPoint());
         obstacleElements->append(QPoint());
         visitedElements->append(QPoint());
+        nextElements->append(QPoint());
+        pathElements->append(QPoint());
+
     }
 
     // Start, goal and current elements
@@ -44,6 +50,11 @@ GridView::GridView(QChartView* parent): QChartView(parent)
     currentArrangement = EMPTY;
     currentAlgorithm = NOALGO;
     currentState = false;
+
+    // Creating the right number of nodes in the grid (should avoid push_back after initialization)
+    Node gridNodeBackend;
+    for (int i{}; i < widthGrid * heightGrid; i++){gridNodes.Nodes.push_back(gridNodeBackend);}
+
 }
 
 // Destructor
@@ -51,12 +62,15 @@ GridView::~GridView()
 {
     std::cerr << "Destroying Grid View \n";
     std::cerr << "Backend Grid: \n" <<
-                 "Start index: " << gridNodes.startIndex << "\n" <<
-                 "End index: " << gridNodes.endIndex << "\n";
+                 "Start: (" << gridNodes.Nodes[gridNodes.startIndex].xCoord << ", " << gridNodes.Nodes[gridNodes.startIndex].yCoord << "): "
+                            <<gridNodes.startIndex << "\n" <<
+                 "End: (" << gridNodes.Nodes[gridNodes.endIndex].xCoord << ", " << gridNodes.Nodes[gridNodes.endIndex].yCoord << "): "
+                            <<gridNodes.endIndex << "\n";
 
     delete freeElements;
     delete obstacleElements;
     delete visitedElements;
+    delete nextElements;
     delete startElement;
     delete endElement;
     delete currentElement;
@@ -126,7 +140,6 @@ int GridView::getHeightGrid() const
 void GridView::populateGridMap(ARRANGEMENTS arrangement)
 {
     std::cerr << "Populating the grid in the chart \n";
-
     if (arrangement == EMPTY)
     {
         // Setting Default start and end points
@@ -160,22 +173,32 @@ void GridView::populateGridMap(ARRANGEMENTS arrangement)
                     freeElements->replace(indexGrid, QPointF(x, y));
                 }
 
-                // Grid Point: updating coordinated, already initialized as visited == false
-                Node gridNodeBackend;
-                gridNodeBackend.xCoord = int(x);
-                gridNodeBackend.yCoord = int(y);
-
-                // Populating the backend grid with the point (including start and end)
-                gridNodes.Nodes.push_back(gridNodeBackend);
-
-                x++;
-                indexGrid++;
-
                 // Deleting the obstacle if present (useful for reset)
                 if (gridNodes.Nodes[indexGrid].obstacle == true)
                 {
                     obstacleElements->replace(indexGrid, QPointF());
                 }
+
+                // Grid Point: updating coordinates
+                Node gridNodeBackend;
+                gridNodeBackend.xCoord = int(x);
+                gridNodeBackend.yCoord = int(y);
+
+                // Populating the backend grid with the point (including start and end)
+                gridNodes.Nodes[indexGrid] = gridNodeBackend;
+
+                // Reset of properties
+                gridNodes.Nodes[indexGrid].obstacle = false;
+                gridNodes.Nodes[indexGrid].visited = false;
+                gridNodes.Nodes[indexGrid].nextUp = false;
+
+                // Reset of Elements
+                visitedElements->replace(indexGrid, QPointF());
+                nextElements->replace(indexGrid, QPointF());
+                pathElements->replace(indexGrid, QPointF());
+
+                x++;
+                indexGrid++;
 
             }
             y++;
@@ -206,58 +229,92 @@ QChart* GridView::createChart()
     //chart->setBackgroundBrush(Qt::SolidPattern);
 
     // Set marker shape
-    freeElements->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
-    obstacleElements->setMarkerShape(QScatterSeries::MarkerShapePentagon);
-    visitedElements->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
-    startElement->setMarkerShape(QScatterSeries::MarkerShapeCircle);
-    endElement->setMarkerShape(QScatterSeries::MarkerShapeStar);
-    currentElement->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
+    freeElements    ->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
+    obstacleElements->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
+    visitedElements ->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
+    nextElements    ->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
+    pathElements    ->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
+    startElement    ->setMarkerShape(QScatterSeries::MarkerShapePentagon);
+    endElement      ->setMarkerShape(QScatterSeries::MarkerShapeStar);
+    //currentElement->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
 
     // Set marker size
-    freeElements->setMarkerSize(markerSize);
+    freeElements    ->setMarkerSize(markerSize);
     obstacleElements->setMarkerSize(markerSize);
-    visitedElements->setMarkerSize(markerSize);
-    startElement->setMarkerSize(markerSize);
-    endElement->setMarkerSize(markerSize);
-    currentElement->setMarkerSize(markerSize);
+    visitedElements ->setMarkerSize(markerSize);
+    nextElements    ->setMarkerSize(markerSize);
+    pathElements    ->setMarkerSize(markerSize);
+    startElement    ->setMarkerSize(markerSize);
+    endElement      ->setMarkerSize(markerSize);
+
+    //currentElement->setMarkerSize(markerSize);
 
     // Label Points
-    freeElements->setPointLabelsVisible();
-    obstacleElements->setPointLabelsVisible();
-    visitedElements->setPointLabelsVisible();
-    startElement->setPointLabelsVisible();
-    endElement->setPointLabelsVisible();
-    currentElement->setPointLabelsVisible();
+//    freeElements    ->setPointLabelsVisible();
+//    obstacleElements->setPointLabelsVisible();
+//    visitedElements ->setPointLabelsVisible();
+//    nextElements    ->setPointLabelsVisible();
+//    startElement    ->setPointLabelsVisible();
+//    endElement      ->setPointLabelsVisible();
+//    //currentElement->setPointLabelsVisible();
 
     // Current QScatter Series point not visible until start of run
-    currentElement->setPointsVisible(false);
+    currentElement  ->setPointsVisible(false);
 
     // Set Marker color
-    obstacleElements->setColor(QColorConstants::Gray);
-    currentElement->setColor(QColorConstants::Red);
+    freeElements    ->setColor(QColorConstants::White);
+    obstacleElements->setColor(QColorConstants::Black);
+    visitedElements ->setColor(QColorConstants::DarkGreen);
+    nextElements    ->setColor(QColorConstants::DarkYellow);
+    pathElements    ->setColor(QColorConstants::Red);
+    startElement    ->setColor(QColorConstants::DarkBlue);
+    endElement      ->setColor(QColorConstants::DarkRed);
+
+    // Set marker border color
+    freeElements    ->setBorderColor(QColorConstants::Black);
+    obstacleElements->setBorderColor(QColorConstants::Black);
+    visitedElements ->setBorderColor(QColorConstants::Black);
+    nextElements    ->setBorderColor(QColorConstants::Black);
+    pathElements    ->setBorderColor(QColorConstants::Black);
+    startElement    ->setBorderColor(QColorConstants::Black);
+    endElement      ->setBorderColor(QColorConstants::Black);
+    //currentElement->setColor(QColorConstants::Red);
 
     // Adding Series in the chart
     chart->addSeries(freeElements);
     chart->addSeries(obstacleElements);
     chart->addSeries(visitedElements);
+    chart->addSeries(nextElements);
+    chart->addSeries(pathElements);
     chart->addSeries(startElement);
     chart->addSeries(endElement);
-    chart->addSeries(currentElement);
+    //chart->addSeries(currentElement);
 
     // Chart axis
     chart->createDefaultAxes();
+    chart->setPlotAreaBackgroundVisible(false);
+
     QList<QAbstractAxis*> xAxis = chart->axes(Qt::Horizontal);
     QList<QAbstractAxis*> yAxis = chart->axes(Qt::Vertical);
-    xAxis.first()->setRange(0, this->widthGrid + 1);
-    yAxis.first()->setRange(0, this->heightGrid + 1);
+
+    xAxis.first()->setRange(0.6, this->widthGrid + 0.35);
+    yAxis.first()->setRange(0.4, this->heightGrid + 0.45);
+
+    xAxis.first()->setLabelsVisible(false);
+    yAxis.first()->setLabelsVisible(false);
+
+    xAxis.first()->setLineVisible(false);
+    yAxis.first()->setLineVisible(false);
 
     // Setting name of the elements
-    freeElements->setName("Free nodes");
+    startElement    ->setName("Start");
+    endElement      ->setName("Goal");
+    freeElements    ->setName("Free nodes");
     obstacleElements->setName("Obstacle nodes");
-    visitedElements->setName("Visited nodes");
-    startElement->setName("Start");
-    endElement->setName("Goal");
-    currentElement->setName("Current node");
+    visitedElements ->setName("Visited nodes");
+    nextElements    ->setName("Next nodes");
+    pathElements    ->setName("Path");
+    //currentElement->setName("Current node");
 
     // Create legends
     chart->legend()->setMarkerShape(QLegend::MarkerShapeFromSeries);
@@ -279,7 +336,7 @@ void GridView::handleClickedPoint(const QPointF& point)
     QPointF nullQPoint = QPointF();
 
     // ClosestIndexPos
-    int clickedIndex = coordToIndex(clickedPoint, heightGrid);
+    int clickedIndex = coordToIndex(clickedPoint, widthGrid);
     std::cerr << "clickedIndex: " << clickedIndex << "\n";
 
     // If the user choose to insert obstacles
@@ -316,6 +373,7 @@ void GridView::handleClickedPoint(const QPointF& point)
 
         // Updating Starting point in backend grid
         gridNodes.startIndex = clickedIndex;
+
 
         // if the clicked point is free
         if (gridNodes.Nodes[clickedIndex].obstacle == false)
@@ -391,27 +449,36 @@ void GridView::handleClickedPoint(const QPointF& point)
 
 qreal GridView::computeDistanceBetweenPoints(const QPointF& pointA, const QPointF& pointB)
 {
-    return qSqrt(std::pow(pointA.x() - pointB.x(), 2)
-                 + std::pow(pointA.y() - pointB.y(), 2));
+    return qSqrt(   std::pow(pointA.x() - pointB.x(), 2)
+                  + std::pow(pointA.y() - pointB.y(), 2));
 }
 
-int coordToIndex(const QPointF& point, int heightGrid)
+int coordToIndex(const QPointF& point, int widthGrid)
 {
-    return (point.x() - 1) * heightGrid + point.y() - 1;
+    return (point.y() - 1) * widthGrid + point.x() - 1;
 }
 
-int coordToIndex(int x, int y,  int heightGrid)
+int coordToIndex(int x, int y,  int widthGrid)
 {
-    return (x - 1) * heightGrid + y - 1;
+    return (y - 1) * widthGrid + x - 1;
 }
 
 
 void GridView::AlgorithmView(bool on)
 {
     if (on){
-        currentElement->setPointsVisible(true);
+        currentElement  ->setPointsVisible(true);
+        nextElements    ->setPointsVisible(true);
+        pathElements    ->setPointsVisible(true);
+        visitedElements ->setPointsVisible(true);
+
+
     }else{
-        currentElement->setPointsVisible(false);
+        currentElement  ->setPointsVisible(false);
+        nextElements    ->setPointsVisible(false);
+        visitedElements ->setPointsVisible(false);
+        pathElements    ->setPointsVisible(false);
+
     }
 
 }
@@ -422,56 +489,117 @@ bool GridView::handleUpdatedgridView(UPDATETYPES updateType, int updateIndex)
 {
     // Return True when this is done
 
-    if (updateType == CURRENT)
-    {
-        currentElement->setPointsVisible();
-        if (updateIndex == gridNodes.startIndex){                   // Current node is the start point
-
-            // Retrieving the current point coordinates
-            QList<QPointF> startElementsPoints = startElement->points();
-            QPointF currentPoint = startElementsPoints[0];
-
-            startElement->replace(currentPoint, QPointF());
-            currentElement->replace(0, currentPoint);
-        }
-
-        if (gridNodes.Nodes[updateIndex].visited == false)
-        {
-
-            if (gridNodes.Nodes[updateIndex].obstacle == false){   // Current node is free
-
-                // Retrieving the current point coordinates
-                QList<QPointF> freeElementsPoints = freeElements->points();
-                QPointF currentPoint = freeElementsPoints[updateIndex];
-
-                freeElements->replace(updateIndex, QPointF());
-                currentElement->replace(0, currentPoint);
-
-            }else{  // Current node is an obstacle
-
-                // Retrieving the current point coordinates
-                QList<QPointF> obstacleElementsPoints = obstacleElements->points();
-                QPointF currentPoint = obstacleElementsPoints[updateIndex];
-
-                obstacleElements->replace(updateIndex, QPointF());
-                currentElement->replace(0, currentPoint);
-            }
+    if (updateType == CURRENT){
+        if (gridNodes.Nodes[updateIndex].visited == false){
+            // Current node is free
+            if (gridNodes.Nodes[updateIndex].obstacle == false){ replaceFreebyCurrent(updateIndex) ; }
 
         }
 
+    }else if(updateType == VISIT){
 
-    }else if(updateType == VISIT)
-    {
-        // Current node is (must be) free
-        QList<QPointF> freeElementsPoints = freeElements->points();
-        QPointF visitedPoint = freeElementsPoints[updateIndex];
+        replaceNextbyVisited(updateIndex);
 
-        freeElements->replace(updateIndex, QPointF());
-        visitedElements->replace(updateIndex, visitedPoint);
+    }else if (updateType == NEXT){
+        replaceFreebyNext(updateIndex);
+    }else if (updateType == PATH){
+
+        replaceVisitedbyPath(updateIndex);
     }
+
 
     update();
 
     return true;
 
 }
+
+
+// Replacing functions
+
+void GridView::replaceStartbyCurrent()
+{
+// Retrieving the current point coordinates
+QList<QPointF> startElementsPoints = startElement->points();
+QPointF currentPoint = startElementsPoints[0];
+
+startElement->replace(currentPoint, QPointF());
+currentElement->replace(0, currentPoint);
+
+return;
+}
+
+void GridView::replaceFreebyCurrent(int updateIndex)
+{
+// Retrieving the current point coordinates
+QList<QPointF> freeElementsPoints = freeElements->points();
+QPointF currentPoint = freeElementsPoints[updateIndex];
+
+freeElements->replace(updateIndex, QPointF());
+currentElement->replace(0, currentPoint);
+}
+
+void GridView::replaceObstaclebyCurrent(int updateIndex)
+{
+// Retrieving the current point coordinates
+QList<QPointF> obstacleElementsPoints = obstacleElements->points();
+QPointF currentPoint = obstacleElementsPoints[updateIndex];
+
+obstacleElements->replace(updateIndex, QPointF());
+currentElement->replace(0, currentPoint);
+}
+
+void GridView::replaceFreebyVisited(int updateIndex)
+{
+    // Current node is free
+    QList<QPointF> freeElementsPoints = freeElements->points();
+    QPointF visitedPoint = freeElementsPoints[updateIndex];
+
+    if (visitedPoint !=QPointF())
+    {
+    freeElements->replace(updateIndex, QPointF());
+    visitedElements->replace(updateIndex, visitedPoint);
+    }
+}
+
+void GridView::replaceNextbyVisited(int updateIndex)
+{
+    // Current node is next
+    QList<QPointF> nextElementsPoints = nextElements->points();
+    QPointF visitedPoint = nextElementsPoints[updateIndex];
+
+    if (visitedPoint !=QPointF())
+    {
+    nextElements->replace(updateIndex, QPointF());
+    visitedElements->replace(updateIndex, visitedPoint);
+    }
+}
+
+void GridView::replaceFreebyNext(int updateIndex)
+{
+    // Current node is free
+    QList<QPointF> freeElementsPoints = freeElements->points();
+    QPointF nextPoint = freeElementsPoints[updateIndex];
+
+    if (nextPoint !=QPointF())
+    {
+    freeElements->replace(updateIndex, QPointF());
+    nextElements->replace(updateIndex, nextPoint);
+    }
+}
+
+
+void GridView::replaceVisitedbyPath(int updateIndex)
+{
+    // Current node is free
+    QList<QPointF> visitedElementsPoints = visitedElements->points();
+    QPointF pathPoint = visitedElementsPoints[updateIndex];
+
+    if (pathPoint !=QPointF())
+    {
+    visitedElements->replace(updateIndex, QPointF());
+    pathElements->replace(updateIndex, pathPoint);
+    }
+}
+
+

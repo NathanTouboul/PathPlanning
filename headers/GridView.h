@@ -17,18 +17,19 @@ typedef enum {START, END, OBSTACLE, NOINTERACTION} INTERACTIONS;
 typedef enum {EMPTY, MAZE, NOARRANG} ARRANGEMENTS;
 
 // Possible Algorithm chosen in the Algorithm Box
-typedef enum {BFS, NOALGO} ALGOS;
+typedef enum {BFS, DFS, NOALGO} ALGOS;
 
 // Possible update in the grid view from the Path Algorithm
-typedef enum {CURRENT, VISIT} UPDATETYPES;
+typedef enum {CURRENT, VISIT, NEXT, PATH} UPDATETYPES;
 
 
 // Node structure
 struct Node
 {
-    int xCoord, yCoord;
+    int xCoord{}, yCoord{};
     bool visited = false; // false -> free, true -> visited
     bool obstacle = false;
+    bool nextUp = false; // used in pathPlanning (true: in nextNodes)
 };
 
 // Grid structure
@@ -46,8 +47,8 @@ struct grid //: public QObject
 
 
 // Converting point coordinates to index
-int coordToIndex(const QPointF& point, int heightGrid);
-int coordToIndex(int x, int y, int heightGrid);
+int coordToIndex(const QPointF& point, int widthGrid);
+int coordToIndex(int x, int y, int widthGrid);
 
 class GridView: public QChartView
 {
@@ -102,7 +103,16 @@ class GridView: public QChartView
         void AlgorithmView(bool on);
 
         // Method to find neighbors of a node
-        std::vector<Node> retrieveNeighborsGrid(const grid* gridNodes, const Node& currentNode, int heightGrid);
+        //std::vector<Node> retrieveNeighborsGrid(const grid* gridNodes, const Node& currentNode, int heightGrid);
+
+        // Replacing points in gridView
+        void replaceStartbyCurrent();
+        void replaceFreebyCurrent(int updateIndex);
+        void replaceObstaclebyCurrent(int updateIndex);
+        void replaceFreebyVisited(int updateIndex);
+        void replaceFreebyNext(int updateIndex);
+        void replaceNextbyVisited(int updateIndex);
+        void replaceVisitedbyPath(int updateIndex);
 
 
     public Q_SLOTS:
@@ -124,13 +134,16 @@ class GridView: public QChartView
         QScatterSeries* freeElements;
         QScatterSeries* obstacleElements;
         QScatterSeries* visitedElements;
+        QScatterSeries* nextElements;
+        QScatterSeries* pathElements;
+
         QScatterSeries* startElement;
         QScatterSeries* endElement;
         QScatterSeries* currentElement;
 
         int widthGrid = 10;
         int heightGrid = 10;
-        qreal markerSize = 20;
+        qreal markerSize = 30;
 
         INTERACTIONS currentInteraction;
         ARRANGEMENTS currentArrangement;
