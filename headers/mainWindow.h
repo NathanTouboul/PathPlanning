@@ -53,7 +53,8 @@ public: Q_SIGNALS:
         // Handles the different algorithm changes
         void on_algorithmsBox_currentIndexChanged(int index);
 
-
+        // Action to do when the path algorithm is finished
+        void onAlgorithmCompleted();
 
     private:
 

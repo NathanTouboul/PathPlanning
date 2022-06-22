@@ -10,6 +10,7 @@ int main(int argc, char *argv[])
 
     // Setup of the new Window
     MainWindow window;
+
     window.resize(500, 350);
     window.show();
 

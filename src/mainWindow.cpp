@@ -11,6 +11,10 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
 {
     // Setup of the window
     ui->setupUi(this);
+    this->setStyleSheet("QMainWindow"
+                        "{background: '#232939';}");
+    //this->setStyleSheet("centralWidget:hover "
+                        //"{background: 'red';}");
 
     // Setting up the chart view
     setupGridView("gridView");
@@ -23,6 +27,9 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
 
     // A change in the grid view create a change in the chartview
     connect(&pathAlgorithm, &PathAlgorithm::updatedgridView, &gridView, &GridView::handleUpdatedgridView);
+
+    // Connecting the end signal of path planning to the window
+    connect(&pathAlgorithm, &PathAlgorithm::algorithmCompleted, this, &MainWindow::onAlgorithmCompleted);
 }
 
 MainWindow::~MainWindow()
@@ -121,8 +128,6 @@ void MainWindow::on_runButton_clicked()
 
     }
 
-    // Disabling the current QScatter series point as visible
-    //gridView.AlgorithmView(false);
 
 }
 
@@ -147,3 +152,9 @@ void MainWindow::on_algorithmsBox_currentIndexChanged(int index)
 }
 
 
+void MainWindow::onAlgorithmCompleted()
+{
+    gridView.setCurrentState(false);
+    ui->runButton->setChecked(false);
+    ui->runButton->setText(QString("RUN"));
+}

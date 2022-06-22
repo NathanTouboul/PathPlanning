@@ -39,6 +39,7 @@ class PathAlgorithm : public QObject
 
     public: Q_SIGNALS:
         void updatedgridView(UPDATETYPES VISIT, int currentIndex);
+        void algorithmCompleted();
 
     public:
 

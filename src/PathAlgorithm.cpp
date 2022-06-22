@@ -9,8 +9,6 @@
 #include <QFuture>
 #include <stack>
 
-static int countLauchBFS{};
-
 //Constructor
 PathAlgorithm::PathAlgorithm(QObject* parent): QObject (parent)
 {
@@ -212,6 +210,9 @@ void PathAlgorithm::performBFSAlgorithm(QPromise<int>& promise)
         endReached = false;
     }
 
+    simulationOnGoing = false;
+    emit algorithmCompleted();
+
 }
 
 // DFS Algorithm
@@ -352,6 +353,10 @@ void PathAlgorithm::performDFSAlgorithm(QPromise<int>& promise)
     }else{
         endReached = false;
     }
+
+    simulationOnGoing = false;
+    emit algorithmCompleted();
+
 
 }
 std::vector<Node> PathAlgorithm::retrieveNeighborsGrid(const grid& gridNodes, const Node& currentNode, int widthGrid, int heightGrid)

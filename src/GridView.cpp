@@ -17,6 +17,7 @@ GridView::GridView(QChartView* parent): QChartView(parent)
 
     //Initialize QChart
     chart = new QChart();
+    chart->setBackgroundBrush(QBrush(QColor("#232939")));
 
     // New Series of Elements: free, obstacle, seen, start and goal
     freeElements        = new QScatterSeries();
@@ -297,8 +298,8 @@ QChart* GridView::createChart()
     QList<QAbstractAxis*> xAxis = chart->axes(Qt::Horizontal);
     QList<QAbstractAxis*> yAxis = chart->axes(Qt::Vertical);
 
-    xAxis.first()->setRange(0.6, this->widthGrid + 0.35);
-    yAxis.first()->setRange(0.4, this->heightGrid + 0.45);
+    xAxis.first()->setRange(0.6, this->widthGrid + 0.4);
+    yAxis.first()->setRange(0.4, this->heightGrid + 0.55);
 
     xAxis.first()->setLabelsVisible(false);
     yAxis.first()->setLabelsVisible(false);
@@ -474,10 +475,10 @@ void GridView::AlgorithmView(bool on)
 
 
     }else{
-        currentElement  ->setPointsVisible(false);
-        nextElements    ->setPointsVisible(false);
-        visitedElements ->setPointsVisible(false);
-        pathElements    ->setPointsVisible(false);
+//        currentElement  ->setPointsVisible(false);
+//        nextElements    ->setPointsVisible(false);
+//        visitedElements ->setPointsVisible(false);
+//        pathElements    ->setPointsVisible(false);
 
     }
 
