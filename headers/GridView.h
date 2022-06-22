@@ -4,6 +4,7 @@
 #include <QtCharts/QChartGlobal>
 #include <QtCharts/QChartView>
 #include <QtCharts/QScatterSeries>
+#include <QLineSeries>
 #include <QGridLayout>
 #include <QObject>
 #include <array>
@@ -136,14 +137,13 @@ class GridView: public QChartView
         QScatterSeries* visitedElements;
         QScatterSeries* nextElements;
         QScatterSeries* pathElements;
-
         QScatterSeries* startElement;
         QScatterSeries* endElement;
-        QScatterSeries* currentElement;
+        QLineSeries* startToCurrent;
 
-        int widthGrid = 15;
-        int heightGrid = 15;
-        qreal markerSize = 30;
+        int widthGrid;
+        int heightGrid;
+        qreal markerSize;
 
         INTERACTIONS currentInteraction;
         ARRANGEMENTS currentArrangement;

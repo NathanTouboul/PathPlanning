@@ -5,7 +5,7 @@
 #include <QMessageBox>
 #include <QEventLoop>
 #include "headers/GridView.h"
-
+#include <QCategoryAxis>
 #include <queue>
 #include <unistd.h>
 #include <QTest>
@@ -15,20 +15,26 @@ GridView::GridView(QChartView* parent): QChartView(parent)
 {
     std::cerr << "Grid View constructor \n";
 
+    // Default dimensions
+    widthGrid = 20;
+    heightGrid = 20;
+    markerSize = 30;
+
     //Initialize QChart
     chart = new QChart();
-    chart->setBackgroundBrush(QBrush(QColor("#232939")));
+    chart->setBackgroundVisible(true);
 
-    // New Series of Elements: free, obstacle, seen, start and goal
+    // New Series of scatter elements
     freeElements        = new QScatterSeries();
     obstacleElements    = new QScatterSeries();
     visitedElements     = new QScatterSeries();
     nextElements        = new QScatterSeries();
     pathElements        = new QScatterSeries();
-
     startElement        = new QScatterSeries();
     endElement          = new QScatterSeries();
-    currentElement      = new QScatterSeries();
+
+    // Line series
+    startToCurrent      = new QLineSeries();
 
     // Inserting points in the series
     for (int i = 0; i < heightGrid * widthGrid; i++)
@@ -44,7 +50,6 @@ GridView::GridView(QChartView* parent): QChartView(parent)
     // Start, goal and current elements
     startElement->append(QPoint());
     endElement->append(QPoint());
-    currentElement->append(QPointF());
 
     // Setting up current objects
     currentInteraction = NOINTERACTION;
@@ -74,7 +79,6 @@ GridView::~GridView()
     delete nextElements;
     delete startElement;
     delete endElement;
-    delete currentElement;
 }
 
 // Setter: currentInteraction set up with index
@@ -226,8 +230,6 @@ QChart* GridView::createChart()
     // Render
     setRenderHint(QPainter::Antialiasing);
 
-    // Set background color
-    //chart->setBackgroundBrush(Qt::SolidPattern);
 
     // Set marker shape
     freeElements    ->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
@@ -235,9 +237,8 @@ QChart* GridView::createChart()
     visitedElements ->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
     nextElements    ->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
     pathElements    ->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
-    startElement    ->setMarkerShape(QScatterSeries::MarkerShapePentagon);
-    endElement      ->setMarkerShape(QScatterSeries::MarkerShapeStar);
-    //currentElement->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
+    startElement    ->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
+    endElement      ->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
 
     // Set marker size
     freeElements    ->setMarkerSize(markerSize);
@@ -248,8 +249,6 @@ QChart* GridView::createChart()
     startElement    ->setMarkerSize(markerSize);
     endElement      ->setMarkerSize(markerSize);
 
-    //currentElement->setMarkerSize(markerSize);
-
     // Label Points
 //    freeElements    ->setPointLabelsVisible();
 //    obstacleElements->setPointLabelsVisible();
@@ -257,19 +256,23 @@ QChart* GridView::createChart()
 //    nextElements    ->setPointLabelsVisible();
 //    startElement    ->setPointLabelsVisible();
 //    endElement      ->setPointLabelsVisible();
-//    //currentElement->setPointLabelsVisible();
-
-    // Current QScatter Series point not visible until start of run
-    currentElement  ->setPointsVisible(false);
 
     // Set Marker color
-    freeElements    ->setColor(QColorConstants::White);
+    //freeElements    ->setColor(QColorConstants::White);
     obstacleElements->setColor(QColorConstants::Black);
     visitedElements ->setColor(QColorConstants::DarkGreen);
     nextElements    ->setColor(QColorConstants::DarkYellow);
     pathElements    ->setColor(QColorConstants::Red);
     startElement    ->setColor(QColorConstants::DarkBlue);
     endElement      ->setColor(QColorConstants::DarkRed);
+
+    // Set opacity
+    freeElements    ->setOpacity(qreal(0.2));
+    visitedElements ->setOpacity(qreal(0.75));
+    nextElements    ->setOpacity(qreal(0.75));
+    pathElements    ->setOpacity(qreal(0.75));
+    startElement    ->setOpacity(qreal(0.95));
+    endElement      ->setOpacity(qreal(0.95));
 
     // Set marker border color
     freeElements    ->setBorderColor(QColorConstants::Black);
@@ -279,7 +282,6 @@ QChart* GridView::createChart()
     pathElements    ->setBorderColor(QColorConstants::Black);
     startElement    ->setBorderColor(QColorConstants::Black);
     endElement      ->setBorderColor(QColorConstants::Black);
-    //currentElement->setColor(QColorConstants::Red);
 
     // Adding Series in the chart
     chart->addSeries(freeElements);
@@ -289,40 +291,54 @@ QChart* GridView::createChart()
     chart->addSeries(pathElements);
     chart->addSeries(startElement);
     chart->addSeries(endElement);
-    //chart->addSeries(currentElement);
-
-    // Chart axis
-    chart->createDefaultAxes();
-    chart->setPlotAreaBackgroundVisible(false);
-
-    QList<QAbstractAxis*> xAxis = chart->axes(Qt::Horizontal);
-    QList<QAbstractAxis*> yAxis = chart->axes(Qt::Vertical);
-
-    xAxis.first()->setRange(0.6, this->widthGrid + 0.4);
-    yAxis.first()->setRange(0.4, this->heightGrid + 0.55);
-
-    xAxis.first()->setLabelsVisible(false);
-    yAxis.first()->setLabelsVisible(false);
-
-    xAxis.first()->setLineVisible(false);
-    yAxis.first()->setLineVisible(false);
 
     // Setting name of the elements
     startElement    ->setName("Start");
     endElement      ->setName("Goal");
-    freeElements    ->setName("Free nodes");
-    obstacleElements->setName("Obstacle nodes");
-    visitedElements ->setName("Visited nodes");
-    nextElements    ->setName("Next nodes");
+    freeElements    ->setName("Free");
+    obstacleElements->setName("Obstacles");
+    visitedElements ->setName("Visited");
+    nextElements    ->setName("Next");
     pathElements    ->setName("Path");
-    //currentElement->setName("Current node");
+
+    // Not visible until start of simulation
+    visitedElements->setPointsVisible(false);
+    nextElements->setPointsVisible(false);
+    pathElements->setPointsVisible(false);
 
     // Create legends
+    chart->legend()->setVisible(true);
+    chart->legend()->setAlignment(Qt::AlignBottom);
     chart->legend()->setMarkerShape(QLegend::MarkerShapeFromSeries);
+
+    // Customize chart background
+    QLinearGradient backgroundGradient;
+    backgroundGradient.setStart(QPointF(0, 0));
+    backgroundGradient.setFinalStop(QPointF(0, 1));
+    backgroundGradient.setColorAt(0.0, QRgb(0xd2d0d1));
+    backgroundGradient.setColorAt(1.0, QRgb(0x4c4547));
+    backgroundGradient.setCoordinateMode(QGradient::ObjectBoundingMode);
+    chart->setBackgroundBrush(backgroundGradient);
+
+    // Chart axis
+    //chart->createDefaultAxes();
+    chart->createDefaultAxes();
+    chart->setPlotAreaBackgroundVisible(false);
+
+    QList<QAbstractAxis*> axisX = chart->axes(Qt::Horizontal);
+    QList<QAbstractAxis*> axisY = chart->axes(Qt::Vertical);
+
+    axisX.first()->setRange(qreal(0.4), qreal(this->widthGrid  + 0.4));
+    axisY.first()->setRange(qreal(0.4), qreal(this->heightGrid + 0.5));
+
+    // Customize grid lines
+    axisX.first()->setGridLineVisible(false);
+    axisY.first()->setGridLineVisible(false);
 
     // Connecting signals
     connect(freeElements, &QScatterSeries::clicked, this, &GridView::handleClickedPoint);
     connect(obstacleElements, &QScatterSeries::clicked, this, &GridView::handleClickedPoint);
+
     return chart;
 
 }
@@ -468,14 +484,12 @@ int coordToIndex(int x, int y,  int widthGrid)
 void GridView::AlgorithmView(bool on)
 {
     if (on){
-        currentElement  ->setPointsVisible(true);
         nextElements    ->setPointsVisible(true);
         pathElements    ->setPointsVisible(true);
         visitedElements ->setPointsVisible(true);
 
 
     }else{
-//        currentElement  ->setPointsVisible(false);
 //        nextElements    ->setPointsVisible(false);
 //        visitedElements ->setPointsVisible(false);
 //        pathElements    ->setPointsVisible(false);
@@ -490,14 +504,7 @@ bool GridView::handleUpdatedgridView(UPDATETYPES updateType, int updateIndex)
 {
     // Return True when this is done
 
-    if (updateType == CURRENT){
-        if (gridNodes.Nodes[updateIndex].visited == false){
-            // Current node is free
-            if (gridNodes.Nodes[updateIndex].obstacle == false){ replaceFreebyCurrent(updateIndex) ; }
-
-        }
-
-    }else if(updateType == VISIT){
+    if(updateType == VISIT){
 
         replaceNextbyVisited(updateIndex);
 
@@ -517,38 +524,6 @@ bool GridView::handleUpdatedgridView(UPDATETYPES updateType, int updateIndex)
 
 
 // Replacing functions
-
-void GridView::replaceStartbyCurrent()
-{
-// Retrieving the current point coordinates
-QList<QPointF> startElementsPoints = startElement->points();
-QPointF currentPoint = startElementsPoints[0];
-
-startElement->replace(currentPoint, QPointF());
-currentElement->replace(0, currentPoint);
-
-return;
-}
-
-void GridView::replaceFreebyCurrent(int updateIndex)
-{
-// Retrieving the current point coordinates
-QList<QPointF> freeElementsPoints = freeElements->points();
-QPointF currentPoint = freeElementsPoints[updateIndex];
-
-freeElements->replace(updateIndex, QPointF());
-currentElement->replace(0, currentPoint);
-}
-
-void GridView::replaceObstaclebyCurrent(int updateIndex)
-{
-// Retrieving the current point coordinates
-QList<QPointF> obstacleElementsPoints = obstacleElements->points();
-QPointF currentPoint = obstacleElementsPoints[updateIndex];
-
-obstacleElements->replace(updateIndex, QPointF());
-currentElement->replace(0, currentPoint);
-}
 
 void GridView::replaceFreebyVisited(int updateIndex)
 {

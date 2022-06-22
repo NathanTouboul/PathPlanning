@@ -32,6 +32,103 @@ ALGOS PathAlgorithm::getCurrentAlgorithm() const
     return currentAlgorithm;
 }
 
+std::vector<Node> PathAlgorithm::retrieveNeighborsGrid(const grid& gridNodes, const Node& currentNode, int widthGrid, int heightGrid)
+{
+
+    std::vector<Node> neighbors;
+
+
+    // diagonal right up : adding +1 to x and +1 to y
+    if (currentNode.xCoord + 1 <= widthGrid && currentNode.yCoord + 1 <= heightGrid)
+    {
+        int rightUpIndex = coordToIndex(currentNode.xCoord + 1, currentNode.yCoord +1, widthGrid);
+        neighbors.push_back(gridNodes.Nodes[rightUpIndex]);
+    }
+
+    // right: adding +1 to x:
+    if (currentNode.xCoord + 1 <= widthGrid)
+    {
+        int rightIndex = coordToIndex(currentNode.xCoord + 1, currentNode.yCoord, widthGrid);
+        neighbors.push_back(gridNodes.Nodes[rightIndex]);
+
+    }
+
+    // diagonal right down : adding +1 to x and -1 to y
+    if (currentNode.xCoord + 1 <= widthGrid && currentNode.yCoord - 1 >= 1)
+    {
+        int rightDownIndex = coordToIndex(currentNode.xCoord + 1, currentNode.yCoord -1, widthGrid);
+        neighbors.push_back(gridNodes.Nodes[rightDownIndex]);
+    }
+
+    // down: adding -1 to y:
+    if (currentNode.yCoord - 1 >= 1)
+    {
+        int downIndex = coordToIndex(currentNode.xCoord, currentNode.yCoord -1, widthGrid);
+        neighbors.push_back(gridNodes.Nodes[downIndex]);
+    }
+
+    // diagonal left  down : adding -1 to x and -1 to y
+    if (currentNode.xCoord - 1 >= 1 && currentNode.yCoord - 1 >= 1)
+    {
+        int leftDownIndex = coordToIndex(currentNode.xCoord - 1, currentNode.yCoord - 1, widthGrid);
+        neighbors.push_back(gridNodes.Nodes[leftDownIndex]);
+    }
+
+    // left: adding -1 to x:
+    if (currentNode.xCoord - 1 >= 1)
+    {
+        int leftIndex = coordToIndex(currentNode.xCoord - 1, currentNode.yCoord, widthGrid);
+        neighbors.push_back(gridNodes.Nodes[leftIndex]);
+    }
+
+    // diagonal left  up : adding -1 to x and +1 to y
+    if (currentNode.xCoord - 1 >= 1 && currentNode.yCoord + 1 <= heightGrid)
+    {
+        int leftUpIndex = coordToIndex(currentNode.xCoord - 1, currentNode.yCoord + 1, widthGrid);
+        neighbors.push_back(gridNodes.Nodes[leftUpIndex]);
+    }
+
+    // up: adding +1 to y:
+    if (currentNode.yCoord + 1 <= heightGrid)
+    {
+        int upIndex = coordToIndex(currentNode.xCoord, currentNode.yCoord + 1, widthGrid);
+        neighbors.push_back(gridNodes.Nodes[upIndex]);
+    }
+
+    return neighbors;
+}
+
+
+void PathAlgorithm::checkGridNode(grid gridNodes, int heightGrid, int widthGrid)
+{
+    // Display grid
+    std::cerr << "State of grid node \n";
+    int countVisited = 0; int countObstacle = 0; int countFree = 0;
+
+    for (Node node: gridNodes.Nodes)
+    {
+        std::cerr << "(" << node.xCoord << ", " <<  node.yCoord << "): ";
+
+        if (node.visited){std::cerr << ": V"; countVisited++;}
+
+        if (node.obstacle){std::cerr << ": O"; countObstacle++;}
+            else{std::cerr << ": F"; countFree++;}
+
+        if (node.xCoord == widthGrid){std::cerr << " \n";}
+        else{std::cerr << " | ";}
+
+    }
+    std::cerr << "Totals: " << "Visited: " << countVisited
+                            << " - Obstacles: " << countObstacle
+                            << " - Free:" << countFree << "\n";
+
+    // Check size of vector
+    if (static_cast<int>(gridNodes.Nodes.size()) != static_cast<int>(heightGrid * widthGrid))
+    {std::cerr << "Number of nodes in gridNodes: " << gridNodes.Nodes.size() << " vs " << heightGrid * widthGrid << " [ISSUE] \n";}
+    else{std::cerr << "Number of nodes in gridNodes: " << gridNodes.Nodes.size() << "\n";}
+
+}
+
 void PathAlgorithm::runAlgorithm(ALGOS algorithm)
 {
     simulationOnGoing=true;
@@ -67,6 +164,13 @@ void PathAlgorithm::pauseAlgorithm()
     running = false;
     futureOutput.suspend();
 }
+
+void PathAlgorithm::stopAlgorithm()
+{
+    running = false;
+    futureOutput.cancel();
+}
+
 
 // BFS Algorithm
 void PathAlgorithm::performBFSAlgorithm(QPromise<int>& promise)
@@ -357,101 +461,18 @@ void PathAlgorithm::performDFSAlgorithm(QPromise<int>& promise)
     simulationOnGoing = false;
     emit algorithmCompleted();
 
-
-}
-std::vector<Node> PathAlgorithm::retrieveNeighborsGrid(const grid& gridNodes, const Node& currentNode, int widthGrid, int heightGrid)
-{
-
-    std::vector<Node> neighbors;
-
-
-    // diagonal right up : adding +1 to x and +1 to y
-    if (currentNode.xCoord + 1 <= widthGrid && currentNode.yCoord + 1 <= heightGrid)
-    {
-        int rightUpIndex = coordToIndex(currentNode.xCoord + 1, currentNode.yCoord +1, widthGrid);
-        neighbors.push_back(gridNodes.Nodes[rightUpIndex]);
-    }
-
-    // right: adding +1 to x:
-    if (currentNode.xCoord + 1 <= widthGrid)
-    {
-        int rightIndex = coordToIndex(currentNode.xCoord + 1, currentNode.yCoord, widthGrid);
-        neighbors.push_back(gridNodes.Nodes[rightIndex]);
-
-    }
-
-    // diagonal right down : adding +1 to x and -1 to y
-    if (currentNode.xCoord + 1 <= widthGrid && currentNode.yCoord - 1 >= 1)
-    {
-        int rightDownIndex = coordToIndex(currentNode.xCoord + 1, currentNode.yCoord -1, widthGrid);
-        neighbors.push_back(gridNodes.Nodes[rightDownIndex]);
-    }
-
-    // down: adding -1 to y:
-    if (currentNode.yCoord - 1 >= 1)
-    {
-        int downIndex = coordToIndex(currentNode.xCoord, currentNode.yCoord -1, widthGrid);
-        neighbors.push_back(gridNodes.Nodes[downIndex]);
-    }
-
-    // diagonal left  down : adding -1 to x and -1 to y
-    if (currentNode.xCoord - 1 >= 1 && currentNode.yCoord - 1 >= 1)
-    {
-        int leftDownIndex = coordToIndex(currentNode.xCoord - 1, currentNode.yCoord - 1, widthGrid);
-        neighbors.push_back(gridNodes.Nodes[leftDownIndex]);
-    }
-
-    // left: adding -1 to x:
-    if (currentNode.xCoord - 1 >= 1)
-    {
-        int leftIndex = coordToIndex(currentNode.xCoord - 1, currentNode.yCoord, widthGrid);
-        neighbors.push_back(gridNodes.Nodes[leftIndex]);
-    }
-
-    // diagonal left  up : adding -1 to x and +1 to y
-    if (currentNode.xCoord - 1 >= 1 && currentNode.yCoord + 1 <= heightGrid)
-    {
-        int leftUpIndex = coordToIndex(currentNode.xCoord - 1, currentNode.yCoord + 1, widthGrid);
-        neighbors.push_back(gridNodes.Nodes[leftUpIndex]);
-    }
-
-    // up: adding +1 to y:
-    if (currentNode.yCoord + 1 <= heightGrid)
-    {
-        int upIndex = coordToIndex(currentNode.xCoord, currentNode.yCoord + 1, widthGrid);
-        neighbors.push_back(gridNodes.Nodes[upIndex]);
-    }
-
-    return neighbors;
 }
 
 
-void PathAlgorithm::checkGridNode(grid gridNodes, int heightGrid, int widthGrid)
+void PathAlgorithm::performAStarAlgorithm(QPromise<int>& promise)
 {
+    // Allow to pause and stop the simulation (to debug)
+    promise.suspendIfRequested();
+    if (promise.isCanceled())
+        return;
+
     // Display grid
-    std::cerr << "State of grid node \n";
-    int countVisited = 0; int countObstacle = 0; int countFree = 0;
+    checkGridNode(gridNodes, heightGrid, widthGrid);
 
-    for (Node node: gridNodes.Nodes)
-    {
-        std::cerr << "(" << node.xCoord << ", " <<  node.yCoord << "): ";
-
-        if (node.visited){std::cerr << ": V"; countVisited++;}
-
-        if (node.obstacle){std::cerr << ": O"; countObstacle++;}
-            else{std::cerr << ": F"; countFree++;}
-
-        if (node.xCoord == widthGrid){std::cerr << " \n";}
-        else{std::cerr << " | ";}
-
-    }
-    std::cerr << "Totals: " << "Visited: " << countVisited
-                            << " - Obstacles: " << countObstacle
-                            << " - Free:" << countFree << "\n";
-
-    // Check size of vector
-    if (static_cast<int>(gridNodes.Nodes.size()) != static_cast<int>(heightGrid * widthGrid))
-    {std::cerr << "Number of nodes in gridNodes: " << gridNodes.Nodes.size() << " vs " << heightGrid * widthGrid << " [ISSUE] \n";}
-    else{std::cerr << "Number of nodes in gridNodes: " << gridNodes.Nodes.size() << "\n";}
 
 }

@@ -27,10 +27,12 @@ class PathAlgorithm : public QObject
         void runAlgorithm(ALGOS algorithm);
         void pauseAlgorithm();
         void resumeAlgorithm();
+        void stopAlgorithm();
 
-        // BFS Algorithm
+        // Different Algorithms
         void performBFSAlgorithm(QPromise<int>& promise);
         void performDFSAlgorithm(QPromise<int>& promise);
+        void performAStarAlgorithm(QPromise<int>& promise);
 
         // Retrieving the neighbors of a point in a grid
         std::vector<Node> retrieveNeighborsGrid(const grid& gridNodes, const Node& currentNode, int widthGrid, int heightGrid);

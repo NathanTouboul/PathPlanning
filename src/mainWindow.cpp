@@ -11,10 +11,23 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
 {
     // Setup of the window
     ui->setupUi(this);
-    this->setStyleSheet("QMainWindow"
-                        "{background: '#232939';}");
-    //this->setStyleSheet("centralWidget:hover "
-                        //"{background: 'red';}");
+//    this->setStyleSheet("QMainWindow"
+//                        "{background: '#232939';}");
+
+    // Customize chart background
+    QLinearGradient backgroundGradient;
+    backgroundGradient.setStart(QPointF(0, 0));
+    backgroundGradient.setFinalStop(QPointF(0, 1));
+    backgroundGradient.setColorAt(0.0, QRgb(0xd2d0d1));
+    backgroundGradient.setColorAt(1.0, QRgb(0x4c4547));
+    backgroundGradient.setCoordinateMode(QGradient::ObjectBoundingMode);
+
+    QBrush brush(backgroundGradient);
+
+    QPalette palette;
+    palette.setBrush(QPalette::Window, brush);
+
+    setPalette(palette);
 
     // Setting up the chart view
     setupGridView("gridView");
@@ -69,8 +82,8 @@ void MainWindow::setupGridView(QString gridViewName)
 
     // Setting up chartview
     ui->gridView->setObjectName(gridViewName);
-    ui->gridView->setMinimumWidth(qreal(200));
-    ui->gridView->setMinimumHeight(qreal(500));
+    ui->gridView->setMinimumWidth(qreal(700));
+    ui->gridView->setMinimumHeight(qreal(700));
 
     // Create Chart in chartview
     QChart* chart = gridView.createChart();
@@ -158,3 +171,16 @@ void MainWindow::onAlgorithmCompleted()
     ui->runButton->setChecked(false);
     ui->runButton->setText(QString("RUN"));
 }
+
+void MainWindow::on_dialWidth_valueChanged(int value)
+{
+    ui->lcdWidth->display(value);
+}
+
+
+void MainWindow::on_dialHeight_valueChanged(int value)
+{
+    ui->lcdHeight->display(value);
+
+}
+
