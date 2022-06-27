@@ -61,6 +61,14 @@ private slots:
 
         void on_dialHeight_valueChanged(int value);
 
+        void on_horizontalSlider_valueChanged(int value);
+
+        void on_horizontalSlider_sliderReleased();
+
+        void on_dialWidth_sliderReleased();
+
+        void on_dialHeight_sliderReleased();
+
 private:
 
         Ui::MainWindow* ui;

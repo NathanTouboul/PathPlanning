@@ -58,38 +58,32 @@ class GridView: public QChartView
     public:
 
         //Constructor
-        explicit GridView(QChartView* parent=0);
+        explicit GridView(int widthGrid, int heightGrid, int markerSize, QChartView* parent=0);
 
         // Destructor
         virtual ~GridView();
 
-        // Setter: currentInteraction
-        void setCurrentInteraction(int index);
-        void setCurrentInteraction(INTERACTIONS interaction);
+        // Setter/Getter: currentInteraction
+        void            setCurrentInteraction(int index);
+        void            setCurrentInteraction(INTERACTIONS interaction);
+        INTERACTIONS    getCurrentInteraction() const;
 
-        // Setter: currentAlgorithm from Box to PathAlgorithm
-        void setCurrentAlgorithm(int index);
+        // Setter/Getter: currentAlgorithm from Box to PathAlgorithm
+        void    setCurrentAlgorithm(int index);
+        ALGOS   getCurrentAlgorithm() const;
 
-        // Setter: current state
-        void setCurrentState(bool state);
+        // Setter/Getter: current state of simulation running
+        void setSimulationRunning(bool state);
+        bool getSimulationRunning() const;
 
-        // getter: grid of Nodes for the path planning algorithms
-        grid& getGrid();
-
-        // Getter current interaction
-        INTERACTIONS getCurrentInteraction() const;
-
-        // Getter current Arrangement
+        // Setter/Getter current Arrangement
         ARRANGEMENTS getCurrentArrangement() const;
 
-        // Getter: current Algorithm for the main window
-        ALGOS getCurrentAlgorithm() const;
-
-        // Getter current state
-        bool getCurrentState() const;
-
-        // Getter: height grid
+        // Setter/Getter: height grid
         int getHeightGrid() const;
+
+        // Setter/Gsetter: grid of Nodes for the path planning algorithms
+        grid& getGrid();
 
         // Create the chart and the grid
         QChart* createChart();
@@ -103,9 +97,6 @@ class GridView: public QChartView
         // Setup view for algorithm
         void AlgorithmView(bool on);
 
-        // Method to find neighbors of a node
-        //std::vector<Node> retrieveNeighborsGrid(const grid* gridNodes, const Node& currentNode, int heightGrid);
-
         // Replacing points in gridView
         void replaceStartbyCurrent();
         void replaceFreebyCurrent(int updateIndex);
@@ -115,6 +106,8 @@ class GridView: public QChartView
         void replaceNextbyVisited(int updateIndex);
         void replaceVisitedbyPath(int updateIndex);
 
+        // Modifying View
+        void setElementsMarkerSize();
 
     public Q_SLOTS:
 
@@ -148,7 +141,7 @@ class GridView: public QChartView
         INTERACTIONS currentInteraction;
         ARRANGEMENTS currentArrangement;
         ALGOS currentAlgorithm;
-        bool currentState;
+        bool simulationRunning;
 
         grid gridNodes;
 

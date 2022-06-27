@@ -11,14 +11,14 @@
 #include <QTest>
 
 // Constructor
-GridView::GridView(QChartView* parent): QChartView(parent)
+GridView::GridView(int widthGrid, int heightGrid, int markerSize, QChartView* parent): QChartView(parent)
 {
     std::cerr << "Grid View constructor \n";
 
     // Default dimensions
-    widthGrid = 20;
-    heightGrid = 20;
-    markerSize = 30;
+    this->widthGrid = widthGrid;
+    this->heightGrid = heightGrid;
+    this->markerSize = markerSize;
 
     //Initialize QChart
     chart = new QChart();
@@ -47,7 +47,7 @@ GridView::GridView(QChartView* parent): QChartView(parent)
 
     }
 
-    // Start, goal and current elements
+    // Start, goal elements
     startElement->append(QPoint());
     endElement->append(QPoint());
 
@@ -55,7 +55,7 @@ GridView::GridView(QChartView* parent): QChartView(parent)
     currentInteraction = NOINTERACTION;
     currentArrangement = EMPTY;
     currentAlgorithm = NOALGO;
-    currentState = false;
+    simulationRunning = false;
 
     // Creating the right number of nodes in the grid (should avoid push_back after initialization)
     Node gridNodeBackend;
@@ -94,9 +94,9 @@ void GridView::setCurrentInteraction(INTERACTIONS interaction)
 }
 
 // Setter: current state
-void GridView::setCurrentState(bool state)
+void GridView::setSimulationRunning(bool state)
 {
-    currentState = state;
+    simulationRunning = state;
 }
 
 // Setter: currentAlgorithm
@@ -130,9 +130,9 @@ ALGOS GridView::getCurrentAlgorithm() const
 }
 
 // Getter current state
-bool GridView::getCurrentState() const
+bool GridView::getSimulationRunning() const
 {
-    return currentState;
+    return simulationRunning;
 }
 
 // Getter: height grid
@@ -241,13 +241,7 @@ QChart* GridView::createChart()
     endElement      ->setMarkerShape(QScatterSeries::MarkerShapeRectangle);
 
     // Set marker size
-    freeElements    ->setMarkerSize(markerSize);
-    obstacleElements->setMarkerSize(markerSize);
-    visitedElements ->setMarkerSize(markerSize);
-    nextElements    ->setMarkerSize(markerSize);
-    pathElements    ->setMarkerSize(markerSize);
-    startElement    ->setMarkerSize(markerSize);
-    endElement      ->setMarkerSize(markerSize);
+    setElementsMarkerSize();
 
     // Label Points
 //    freeElements    ->setPointLabelsVisible();
@@ -341,6 +335,18 @@ QChart* GridView::createChart()
 
     return chart;
 
+}
+
+void GridView::setElementsMarkerSize()
+{
+    // Set marker size of all elements
+    freeElements    ->setMarkerSize(markerSize);
+    obstacleElements->setMarkerSize(markerSize);
+    visitedElements ->setMarkerSize(markerSize);
+    nextElements    ->setMarkerSize(markerSize);
+    pathElements    ->setMarkerSize(markerSize);
+    startElement    ->setMarkerSize(markerSize);
+    endElement      ->setMarkerSize(markerSize);
 }
 
 void GridView::handleClickedPoint(const QPointF& point)
@@ -456,7 +462,7 @@ void GridView::handleClickedPoint(const QPointF& point)
     {
         QMessageBox::information(this, "Information", "Please select an interaction type");
 
-    } else if (currentState == true)
+    } else if (simulationRunning == true)
     {
         QMessageBox::information(this, "Information", "Please stop the simulation first");
     }

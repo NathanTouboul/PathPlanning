@@ -7,12 +7,11 @@
 #include "headers/GridView.h"
 
 
-MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWindow), pathAlgorithm()
+MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWindow), gridView(20, 20, 25), pathAlgorithm()
 {
     // Setup of the window
     ui->setupUi(this);
-//    this->setStyleSheet("QMainWindow"
-//                        "{background: '#232939';}");
+
 
     // Customize chart background
     QLinearGradient backgroundGradient;
@@ -104,13 +103,13 @@ void MainWindow::on_runButton_clicked()
 
         if (pathAlgorithm.running){
             pathAlgorithm.pauseAlgorithm();
-            gridView.setCurrentState(false);
+            gridView.setSimulationRunning(false);
             ui->runButton->setChecked(false);
             ui->runButton->setText(QString("RUN"));
 
         }else{
             pathAlgorithm.resumeAlgorithm();
-            gridView.setCurrentState(true);
+            gridView.setSimulationRunning(true);
 
             ui->runButton->setChecked(true);
             ui->runButton->setText(QString("PAUSE"));
@@ -131,7 +130,7 @@ void MainWindow::on_runButton_clicked()
         ui->runButton->setText(QString("PAUSE"));
 
         // Blocking the interaction with the gridView
-        gridView.setCurrentState(true);
+        gridView.setSimulationRunning(true);
 
         // Enabling the current QScatter series point as visible
         gridView.AlgorithmView(true);
@@ -167,7 +166,7 @@ void MainWindow::on_algorithmsBox_currentIndexChanged(int index)
 
 void MainWindow::onAlgorithmCompleted()
 {
-    gridView.setCurrentState(false);
+    gridView.setSimulationRunning(false);
     ui->runButton->setChecked(false);
     ui->runButton->setText(QString("RUN"));
 }
@@ -181,6 +180,45 @@ void MainWindow::on_dialWidth_valueChanged(int value)
 void MainWindow::on_dialHeight_valueChanged(int value)
 {
     ui->lcdHeight->display(value);
+
+}
+
+
+void MainWindow::on_horizontalSlider_valueChanged(int value)
+{
+    ui->lcdMarker->display(value);
+}
+
+
+void MainWindow::on_horizontalSlider_sliderReleased()
+{
+    // Set the new marker size
+    gridView.markerSize = ui->lcdMarker->value();
+
+    // Set the marker size of elements
+    gridView.setElementsMarkerSize();
+}
+
+
+void MainWindow::on_dialWidth_sliderReleased()
+{
+//    // Set the new width of the grid
+//    gridView.widthGrid = ui->lcdWidth->value();
+
+//    // Resetting the gridview
+//    gridView.populateGridMap(gridView.getCurrentArrangement());
+
+//
+}
+
+
+void MainWindow::on_dialHeight_sliderReleased()
+{
+//    // Set the new height of the grid
+//    gridView.heightGrid = ui->lcdHeight->value();
+
+//    // Resetting the gridview
+//    gridView.populateGridMap(gridView.getCurrentArrangement());
 
 }
 
