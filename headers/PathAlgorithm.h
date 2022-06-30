@@ -40,7 +40,9 @@ class PathAlgorithm : public QObject
         void checkGridNode(grid gridNodes, int heightGrid, int widthGrid);
 
     public: Q_SIGNALS:
-        void updatedgridView(UPDATETYPES VISIT, int currentIndex);
+        void updatedScatterGridView(UPDATETYPES VISIT, int currentIndex);
+        void updatedLineGridView(QPointF currentPoint, bool addingPoint);
+
         void algorithmCompleted();
 
     public:

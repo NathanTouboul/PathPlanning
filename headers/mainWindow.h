@@ -37,7 +37,7 @@ class MainWindow : public QMainWindow
 
 
 public: Q_SIGNALS:
-    void launchedBFS();
+    //void launchedBFS();
 
     public slots:
 
@@ -56,7 +56,7 @@ public: Q_SIGNALS:
         // Action to do when the path algorithm is finished
         void onAlgorithmCompleted();
 
-private slots:
+    private slots:
         void on_dialWidth_valueChanged(int value);
 
         void on_dialHeight_valueChanged(int value);

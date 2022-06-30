@@ -33,23 +33,12 @@ GridView::GridView(int widthGrid, int heightGrid, int markerSize, QChartView* pa
     startElement        = new QScatterSeries();
     endElement          = new QScatterSeries();
 
-    // Line series
-    startToCurrent      = new QLineSeries();
-
-    // Inserting points in the series
-    for (int i = 0; i < heightGrid * widthGrid; i++)
-    {
-        freeElements->append(QPoint());
-        obstacleElements->append(QPoint());
-        visitedElements->append(QPoint());
-        nextElements->append(QPoint());
-        pathElements->append(QPoint());
-
-    }
-
     // Start, goal elements
     startElement->append(QPoint());
     endElement->append(QPoint());
+
+    // Line series
+    pathLine      = new QLineSeries();
 
     // Setting up current objects
     currentInteraction = NOINTERACTION;
@@ -57,9 +46,8 @@ GridView::GridView(int widthGrid, int heightGrid, int markerSize, QChartView* pa
     currentAlgorithm = NOALGO;
     simulationRunning = false;
 
-    // Creating the right number of nodes in the grid (should avoid push_back after initialization)
-    Node gridNodeBackend;
-    for (int i{}; i < widthGrid * heightGrid; i++){gridNodes.Nodes.push_back(gridNodeBackend);}
+    // Initializing gridNode
+    grid gridNodes;
 
 }
 
@@ -142,14 +130,53 @@ int GridView::getHeightGrid() const
 
 }
 
-void GridView::populateGridMap(ARRANGEMENTS arrangement)
+void GridView::populateGridMap(ARRANGEMENTS arrangement, bool reset)
 {
-    std::cerr << "Populating the grid in the chart \n";
+
+    if (simulationRunning)
+    {
+        QMessageBox::information(this, "Information", "Please stop the simulation first");
+    }
+
+    if (reset){
+        // Removing all points
+        freeElements    ->removePoints(0, freeElements      ->points().size());
+        obstacleElements->removePoints(0, obstacleElements  ->points().size());
+        visitedElements ->removePoints(0, visitedElements   ->points().size());
+        nextElements    ->removePoints(0, nextElements      ->points().size());
+        pathElements    ->removePoints(0, pathElements      ->points().size());
+        pathLine        ->removePoints(0, pathLine          ->points().size());
+
+        // Remove nodes from gridNodes
+        gridNodes.Nodes.clear();
+
+        // Modifying
+        chart->axes(Qt::Horizontal).first() ->setRange(qreal(0.4), qreal(this->widthGrid  + 0.4));
+        chart->axes(Qt::Vertical).first()   ->setRange(qreal(0.4), qreal(this->heightGrid + 0.5));
+
+    }
+
+    // Inserting points in the series
+    for (int i = 0; i < heightGrid * widthGrid; i++)
+    {
+        freeElements->append(QPoint());
+        obstacleElements->append(QPoint());
+        visitedElements->append(QPoint());
+        nextElements->append(QPoint());
+        pathElements->append(QPoint());
+    }
+
+
+    // Creating the right number of nodes in the grid (should avoid push_back after initialization)
+    Node gridNodeBackend;
+    for (int i{}; i < widthGrid * heightGrid; i++){gridNodes.Nodes.push_back(gridNodeBackend);}
+
+
     if (arrangement == EMPTY)
     {
         // Setting Default start and end points
-        startElement->replace(0, QPointF(1, heightGrid));
-        endElement->replace(0, QPointF(widthGrid, 1));
+        startElement    ->replace(0, QPointF(1, heightGrid));
+        endElement      ->replace(0, QPointF(widthGrid, 1));
 
         // Index for gridPoint Vector
         int indexGrid{};
@@ -158,7 +185,6 @@ void GridView::populateGridMap(ARRANGEMENTS arrangement)
         // Populating the grid with elements
         for (int j=1;  j <= this->heightGrid; j++)
         {
-
             qreal x{1};
             for (int i=1;  i <= this->widthGrid; i++)
             {
@@ -198,9 +224,9 @@ void GridView::populateGridMap(ARRANGEMENTS arrangement)
                 gridNodes.Nodes[indexGrid].nextUp = false;
 
                 // Reset of Elements
-                visitedElements->replace(indexGrid, QPointF());
-                nextElements->replace(indexGrid, QPointF());
-                pathElements->replace(indexGrid, QPointF());
+                visitedElements ->replace(indexGrid, QPointF());
+                nextElements    ->replace(indexGrid, QPointF());
+                pathElements    ->replace(indexGrid, QPointF());
 
                 x++;
                 indexGrid++;
@@ -225,7 +251,7 @@ void GridView::populateGridMap(ARRANGEMENTS arrangement)
 QChart* GridView::createChart()
 {
     // Populate grid
-    GridView::populateGridMap(currentArrangement);
+    GridView::populateGridMap(currentArrangement, false);
 
     // Render
     setRenderHint(QPainter::Antialiasing);
@@ -285,6 +311,7 @@ QChart* GridView::createChart()
     chart->addSeries(pathElements);
     chart->addSeries(startElement);
     chart->addSeries(endElement);
+    chart->addSeries(pathLine);
 
     // Setting name of the elements
     startElement    ->setName("Start");
@@ -506,28 +533,25 @@ void GridView::AlgorithmView(bool on)
 
 
 // Updating the view (for the path planning algorithms)
-bool GridView::handleUpdatedgridView(UPDATETYPES updateType, int updateIndex)
+bool GridView::handleUpdatedScatterGridView(UPDATETYPES updateType, int updateIndex)
 {
-    // Return True when this is done
-
-    if(updateType == VISIT){
-
+    if(updateType           == VISIT)   {
         replaceNextbyVisited(updateIndex);
-
-    }else if (updateType == NEXT){
+    }else if (updateType    == NEXT)    {
         replaceFreebyNext(updateIndex);
-    }else if (updateType == PATH){
-
+    }else if (updateType    == PATH)    {
         replaceVisitedbyPath(updateIndex);
     }
-
-
+    update();
+    return true;
+}
+bool GridView::handleUpdatedLineGridView(QPointF updatePoint, bool addingPoint)
+{
+    updateLine(updatePoint, addingPoint);
     update();
 
     return true;
-
 }
-
 
 // Replacing functions
 
@@ -585,3 +609,11 @@ void GridView::replaceVisitedbyPath(int updateIndex)
 }
 
 
+void GridView::updateLine(QPointF updatePoint, bool addingPoint)
+{
+    if (addingPoint){
+        pathLine->append(updatePoint);
+    }else{
+        pathLine->replace(pathLine->points().size() - 1, updatePoint);
+    }
+}

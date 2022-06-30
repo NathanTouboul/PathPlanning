@@ -38,7 +38,8 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
     setupAlgorithmsComboBox();
 
     // A change in the grid view create a change in the chartview
-    connect(&pathAlgorithm, &PathAlgorithm::updatedgridView, &gridView, &GridView::handleUpdatedgridView);
+    connect(&pathAlgorithm, &PathAlgorithm::updatedScatterGridView, &gridView, &GridView::handleUpdatedScatterGridView);
+    connect(&pathAlgorithm, &PathAlgorithm::updatedLineGridView,    &gridView, &GridView::handleUpdatedLineGridView);
 
     // Connecting the end signal of path planning to the window
     connect(&pathAlgorithm, &PathAlgorithm::algorithmCompleted, this, &MainWindow::onAlgorithmCompleted);
@@ -73,6 +74,7 @@ void MainWindow::setupAlgorithmsComboBox()
     // Adding first interation: BFS
     ui->algorithmsBox->addItem("BFS");
     ui->algorithmsBox->addItem("DFS");
+    ui->algorithmsBox->addItem("A*");
 
 }
 
@@ -146,7 +148,7 @@ void MainWindow::on_runButton_clicked()
 void MainWindow::on_resetButton_clicked()
 {
     // Calling populate grid with same previous arrangement
-    gridView.populateGridMap(gridView.getCurrentArrangement());
+    gridView.populateGridMap(gridView.getCurrentArrangement(), true);
 
 }
 
@@ -202,23 +204,21 @@ void MainWindow::on_horizontalSlider_sliderReleased()
 
 void MainWindow::on_dialWidth_sliderReleased()
 {
-//    // Set the new width of the grid
-//    gridView.widthGrid = ui->lcdWidth->value();
+    // Set the new width of the grid
+    gridView.widthGrid = ui->lcdWidth->value();
 
-//    // Resetting the gridview
-//    gridView.populateGridMap(gridView.getCurrentArrangement());
-
-//
+    // Resetting the gridview
+    gridView.populateGridMap(gridView.getCurrentArrangement(), true);
 }
 
 
 void MainWindow::on_dialHeight_sliderReleased()
 {
-//    // Set the new height of the grid
-//    gridView.heightGrid = ui->lcdHeight->value();
+    // Set the new height of the grid
+    gridView.heightGrid = ui->lcdHeight->value();
 
-//    // Resetting the gridview
-//    gridView.populateGridMap(gridView.getCurrentArrangement());
+    // Resetting the gridview
+    gridView.populateGridMap(gridView.getCurrentArrangement(), true);
 
 }
 

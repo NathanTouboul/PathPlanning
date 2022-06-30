@@ -7,7 +7,7 @@
 #include <QLineSeries>
 #include <QGridLayout>
 #include <QObject>
-#include <array>
+#include <vector>
 
 QT_USE_NAMESPACE
 
@@ -18,19 +18,29 @@ typedef enum {START, END, OBSTACLE, NOINTERACTION} INTERACTIONS;
 typedef enum {EMPTY, MAZE, NOARRANG} ARRANGEMENTS;
 
 // Possible Algorithm chosen in the Algorithm Box
-typedef enum {BFS, DFS, NOALGO} ALGOS;
+typedef enum {BFS, DFS, ASTAR, NOALGO} ALGOS;
 
 // Possible update in the grid view from the Path Algorithm
-typedef enum {CURRENT, VISIT, NEXT, PATH} UPDATETYPES;
+typedef enum {CURRENT, VISIT, NEXT, PATH, LINE} UPDATETYPES;
 
 
 // Node structure
 struct Node
 {
+    // For all algorithms
     int xCoord{}, yCoord{};
-    bool visited = false; // false -> free, true -> visited
+    bool visited = false;
     bool obstacle = false;
-    bool nextUp = false; // used in pathPlanning (true: in nextNodes)
+
+    // used in BFS and DFS (true: in nextNodes)
+    bool nextUp = false;
+
+    // used in ASTAR
+    float globalGoal;
+    float localGoal;
+    Node* parent;
+    std::vector<Node*> neighbours;
+
 };
 
 // Grid structure
@@ -89,7 +99,7 @@ class GridView: public QChartView
         QChart* createChart();
 
         // Populating the grid with points, depending on the arrangement selected
-        void populateGridMap(ARRANGEMENTS arrangement);
+        void populateGridMap(ARRANGEMENTS arrangement, bool reset);
 
         // Computing the distance between two points
         qreal computeDistanceBetweenPoints(const QPointF& pointA, const QPointF& pointB);
@@ -106,6 +116,9 @@ class GridView: public QChartView
         void replaceNextbyVisited(int updateIndex);
         void replaceVisitedbyPath(int updateIndex);
 
+        // Update Line
+        void updateLine(QPointF updatePoint, bool addingPoint);
+
         // Modifying View
         void setElementsMarkerSize();
 
@@ -115,7 +128,8 @@ class GridView: public QChartView
         void handleClickedPoint(const QPointF& point);
 
         // Handles the changes in the gridView by the path planning algorithm
-        bool handleUpdatedgridView(UPDATETYPES updateType, int updateIndex);
+        bool handleUpdatedScatterGridView(UPDATETYPES updateType, int updateIndex);
+        bool handleUpdatedLineGridView(QPointF updatePoint, bool addingPoint);
 
     public:
         // Launching BFS multi threaded
@@ -132,7 +146,8 @@ class GridView: public QChartView
         QScatterSeries* pathElements;
         QScatterSeries* startElement;
         QScatterSeries* endElement;
-        QLineSeries* startToCurrent;
+
+        QLineSeries* pathLine;
 
         int widthGrid;
         int heightGrid;
@@ -140,7 +155,8 @@ class GridView: public QChartView
 
         INTERACTIONS currentInteraction;
         ARRANGEMENTS currentArrangement;
-        ALGOS currentAlgorithm;
+        ALGOS        currentAlgorithm;
+
         bool simulationRunning;
 
         grid gridNodes;
