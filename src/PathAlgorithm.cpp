@@ -44,6 +44,11 @@ void PathAlgorithm::setSpeedVizualization(int speed)
     this->speedVisualization = speed;
 }
 
+// Getters/Setters: Simulation on going
+void PathAlgorithm::setSimulationOnGoing(bool onGoing)
+{
+    this->simulationOnGoing = onGoing;
+}
 
 std::vector<Node> PathAlgorithm::retrieveNeighborsGrid(const grid& gridNodes, const Node& currentNode, int widthGrid, int heightGrid)
 {
@@ -154,6 +159,9 @@ void PathAlgorithm::runAlgorithm(ALGOS algorithm)
     case DFS:
         futureOutput = QtConcurrent::run(&pool, &PathAlgorithm::performDFSAlgorithm, this);
         break;
+    case DIJKSTRA:
+        futureOutput = QtConcurrent::run(&pool, &PathAlgorithm::performDijkstraAlgorithm, this);
+        break;
     case ASTAR:
         futureOutput = QtConcurrent::run(&pool, &PathAlgorithm::performAStarAlgorithm, this);
         break;
@@ -186,153 +194,6 @@ void PathAlgorithm::stopAlgorithm()
     running = false;
     futureOutput.cancel();
 }
-
-// Maze generation
-void PathAlgorithm::performRecursiveBackTrackerAlgorithm(QPromise<int>& promise)
-{
-
-    // Allow to pause and stop the simulation (to debug)
-    promise.suspendIfRequested();
-    if (promise.isCanceled())
-        return;
-
-    // First step - fill with obstacles
-    for (int index = 0; index < widthGrid * heightGrid; index++){
-        if (index != gridNodes.startIndex || index != gridNodes.endIndex){
-            gridNodes.Nodes[index].obstacle = true;
-            emit updatedScatterGridView(FREETOOBSTACLE, index);
-            // Time and checking for stop from running button
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
-    }
-
-    // Working on a copy of gridNodes (to use visited property)
-    // We need to update the property of the original gridNode th
-    grid gridNodeMaze = gridNodes;
-
-    // stack of visited cells:
-    std::stack<Node*> stackUnVisitedNodes;
-
-    // Pushing the first Node in the stack (we start from 0, 0)
-    stackUnVisitedNodes.push(&(gridNodeMaze.Nodes[gridNodeMaze.startIndex]));
-    gridNodeMaze.Nodes[gridNodeMaze.startIndex].visited = true;
-
-    int numberVisitedCells = 1;
-
-    int offset = 2;
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-
-    while(numberVisitedCells < widthGrid * heightGrid && !stackUnVisitedNodes.empty() ){
-
-        // Current node from the stack
-        Node* currentNode = stackUnVisitedNodes.top();
-        int currentIndex = coordToIndex(currentNode->xCoord, currentNode->yCoord, widthGrid);
-
-        std::vector<int> availableNeighbours;
-
-        // east: adding +1 to x:
-        int eastIndex = coordToIndex(currentNode->xCoord + offset - 1, currentNode->yCoord, widthGrid);
-        int eastIndexOffset = coordToIndex(currentNode->xCoord + offset, currentNode->yCoord, widthGrid);
-        if (currentNode->xCoord + offset <= widthGrid && !gridNodeMaze.Nodes[eastIndexOffset].visited){
-            availableNeighbours.push_back(0);
-        }
-
-        // South: adding -1 to y:
-        int southIndex          =   coordToIndex(currentNode->xCoord,currentNode->yCoord - offset + 1, widthGrid);
-        int southIndexOffset    =   coordToIndex(currentNode->xCoord,currentNode->yCoord - offset, widthGrid);
-        if (currentNode->yCoord - offset >= 1 && !gridNodeMaze.Nodes[southIndexOffset].visited){
-            availableNeighbours.push_back(1);
-        }
-        // West: adding -1 to x:
-        int westIndex = coordToIndex(currentNode->xCoord - offset + 1, currentNode->yCoord, widthGrid);
-        int westIndexOffset = coordToIndex(currentNode->xCoord - offset, currentNode->yCoord, widthGrid);
-
-        if (currentNode->xCoord - offset >= 1 && !gridNodeMaze.Nodes[westIndexOffset].visited){
-            availableNeighbours.push_back(2);
-        }
-
-        // north: adding +1 to y:
-        int northIndex = coordToIndex(currentNode->xCoord, currentNode->yCoord + offset -1, widthGrid);
-        int northIndexOffset = coordToIndex(currentNode->xCoord, currentNode->yCoord + offset, widthGrid);
-        if (currentNode->yCoord + offset <= heightGrid && !gridNodeMaze.Nodes[northIndexOffset].visited){
-            availableNeighbours.push_back(3);
-        }
-
-        // Available neighbours
-        if (!(availableNeighbours.empty())){
-
-            // Choosing one random neighbour
-            int randomNeighour = availableNeighbours[rand() % availableNeighbours.size()];
-
-            // Creating links from the nodes using the inbuilt neighbours vectors in the Node structure
-            switch (randomNeighour) {
-            case 0:
-
-                emit updatedScatterGridView(OBSTACLETOFREE, eastIndex);
-                emit updatedScatterGridView(OBSTACLETOFREE, eastIndexOffset);
-                stackUnVisitedNodes.push(&(gridNodeMaze.Nodes[eastIndexOffset]));
-
-                break;
-            case 1:
-
-                emit updatedScatterGridView(OBSTACLETOFREE, southIndex);
-                emit updatedScatterGridView(OBSTACLETOFREE, southIndexOffset);
-
-                stackUnVisitedNodes.push(&(gridNodeMaze.Nodes[southIndexOffset]));
-
-               // stackVisitedNodes.push(&(gridNodeMaze.Nodes[southIndex]));
-
-                break;
-            case 2:
-
-                emit updatedScatterGridView(OBSTACLETOFREE, westIndex);
-                emit updatedScatterGridView(OBSTACLETOFREE, westIndexOffset);
-
-                stackUnVisitedNodes.push(&(gridNodeMaze.Nodes[westIndexOffset]));
-
-                break;
-            case 3:
-
-                emit updatedScatterGridView(OBSTACLETOFREE, northIndex);
-                emit updatedScatterGridView(OBSTACLETOFREE, northIndexOffset);
-
-                stackUnVisitedNodes.push(&(gridNodeMaze.Nodes[northIndexOffset]));
-
-                break;
-            default:
-                break;
-            }
-
-            numberVisitedCells++;
-            gridNodeMaze.Nodes[currentIndex].visited = true;
-
-            // Time and checking for stop from running button
-            std::this_thread::sleep_for(std::chrono::milliseconds(speedVisualization));
-
-        }else{
-
-            gridNodeMaze.Nodes[currentIndex].visited = true;
-
-            // If there is no available neighbours, we pop
-            if (!stackUnVisitedNodes.empty()){
-                stackUnVisitedNodes.pop();
-            }else{
-                break;
-            }
-
-
-        }
-
-    }
-
-    bool verif = numberVisitedCells == widthGrid * heightGrid;
-    std::cerr << "numberVisitedCells == widthGrid * heightGrid: " << std::boolalpha << verif << "\n";
-
-    simulationOnGoing = false;
-    emit algorithmCompleted();
-}
-
-
 
 // BFS Algorithm
 void PathAlgorithm::performBFSAlgorithm(QPromise<int>& promise)
@@ -454,25 +315,31 @@ void PathAlgorithm::performBFSAlgorithm(QPromise<int>& promise)
         Node goal = currentNode;
         Node reverse = goal;
 
-        int count=0;
-        while(reverse.xCoord != gridNodes.Nodes[gridNodes.startIndex].xCoord || reverse.yCoord != gridNodes.Nodes[gridNodes.startIndex].yCoord)
-        {
+        // Line Path
+        emit updatedLineGridView(QPointF(reverse.xCoord, reverse.yCoord), true, true);
+
+        while(reverse.xCoord != gridNodes.Nodes[gridNodes.startIndex].xCoord || reverse.yCoord != gridNodes.Nodes[gridNodes.startIndex].yCoord){
+
+            emit updatedLineGridView(QPointF(reverse.xCoord, reverse.yCoord), true, false);
 
             int reverseIndex = coordToIndex(reverse.xCoord, reverse.yCoord, widthGrid);
             Node parentNode = parentNodes[reverseIndex];
 
-            emit updatedScatterGridView(PATH, reverseIndex);
             reverse = parentNode;
-            count++;
+
+            // Updating the GridView with PATH
+            emit updatedScatterGridView(PATH, reverseIndex);
             std::this_thread::sleep_for(std::chrono::milliseconds(speedVisualization));
 
         }
+
+        emit updatedLineGridView(QPointF(gridNodes.Nodes[gridNodes.startIndex].xCoord, gridNodes.Nodes[gridNodes.startIndex].yCoord), true, false);
+
 
     }else{
         endReached = false;
     }
 
-    simulationOnGoing = false;
     emit algorithmCompleted();
 
 }
@@ -575,12 +442,7 @@ void PathAlgorithm::performDFSAlgorithm(QPromise<int>& promise)
             moveCount++;
         }
 
-        //std::cerr << "MOVE COUNT: " << moveCount << "\n";
-
     }
-
-    // Display grid
-    checkGridNode(gridNodes, heightGrid, widthGrid);
 
     // updating promise
     promise.addResult(moveCount);
@@ -609,11 +471,132 @@ void PathAlgorithm::performDFSAlgorithm(QPromise<int>& promise)
         endReached = false;
     }
 
-    simulationOnGoing = false;
     emit algorithmCompleted();
 
 }
 
+
+void PathAlgorithm::performDijkstraAlgorithm(QPromise<int>& promise)
+{
+    // Allow to pause and stop the simulation (to debug)
+    promise.suspendIfRequested();
+    if (promise.isCanceled())
+        return;
+
+    // Create connections for each node
+    for(Node& node: gridNodes.Nodes)
+    {
+        // Create connections between nodes (filling the vector neighbours of the Node structure)
+        FillNeighboursNode(node);
+
+        // Navigation Graph -> reset all nodes states
+        node.localGoal      = INFINITY;
+        node.parent         = nullptr;
+    }
+
+    // Lambda function to compute distance between points
+    auto distance = [](Node* a, Node* b)
+    {
+        return sqrtf(   (a->xCoord - b->xCoord) * (a->xCoord - b->xCoord)
+                       +(a->yCoord - b->yCoord) * (a->yCoord - b->yCoord));
+    };
+
+
+    // Starting conditions
+    Node* nodeStart = &(gridNodes.Nodes[gridNodes.startIndex]);
+    Node* nodeEnd = &(gridNodes.Nodes[gridNodes.endIndex]);
+
+    Node* nodeCurrent = &(gridNodes.Nodes[gridNodes.startIndex]);
+    nodeStart->localGoal = 0.0f;
+
+    std::list<Node*> nodesToTest;
+    nodesToTest.push_back(nodeCurrent);
+
+    while(!nodesToTest.empty())
+    {
+        // Sorting untested nodes by global goal
+        nodesToTest.sort([](const Node* a, const Node* b){return a->localGoal < b->localGoal;});
+
+        // The lowest goal can also already been visited, so we pop it in this case
+        while(!nodesToTest.empty() && nodesToTest.front()->visited)     {   nodesToTest.pop_front();    }
+
+        // Breaking if list is empty
+        if (nodesToTest.empty())    {   break;  }
+
+        // Changing current node and setting it to visited
+        nodeCurrent = nodesToTest.front();
+        nodeCurrent->visited = true;
+
+        // Updating the gridview
+        int indexCurrent = coordToIndex(nodeCurrent->xCoord, nodeCurrent->yCoord, widthGrid);
+        emit updatedScatterGridView(VISIT, indexCurrent);
+
+        // Time and checking for stop from running button
+        std::this_thread::sleep_for(std::chrono::milliseconds(speedVisualization));
+
+        // Checking each neighbours
+        for (Node* nodeNeighbour: nodeCurrent->neighbours)
+        {
+
+            // Updating the list of nodes to test
+            // If the neighbour has not been visited and is not an obstacle
+            if(!nodeNeighbour->visited && !nodeNeighbour->obstacle)
+            {
+                // Stopping the algorithm if the goal has been found
+                int nextUpIndex = coordToIndex(nodeNeighbour->xCoord, nodeNeighbour->yCoord, widthGrid);
+
+                if (nextUpIndex == gridNodes.endIndex){
+                    // Break and go to retrieving path (by emptying nodesToTest)
+                    nodesToTest.clear();
+                    nodeNeighbour->parent = nodeCurrent;
+                    break;
+                }else{
+                    nodesToTest.push_back(nodeNeighbour);
+                    emit updatedScatterGridView(NEXT, nextUpIndex);
+                }
+
+            }
+
+            // Neighbours potential lowest parent distance
+            float potentialLowerGoal = nodeCurrent->localGoal + distance(nodeCurrent, nodeNeighbour);
+
+            // If choosing to path this node is a lower distance that what currently the neighbours has set
+            if (potentialLowerGoal < nodeNeighbour->localGoal)
+            {
+                // Selecting the current node as the neighbour's parent
+                nodeNeighbour->parent = nodeCurrent;
+                nodeNeighbour->localGoal = potentialLowerGoal;
+            }
+
+        }
+
+
+
+    }
+
+    // Checking if the end was reached
+    if (nodeEnd->parent != nullptr){
+
+        // Retrieving and plotting the path
+        Node* reverseNode = nodeEnd;
+        while(reverseNode->parent != nullptr)
+        {
+            reverseNode = reverseNode->parent;
+            int reverseIndex = coordToIndex(reverseNode->xCoord, reverseNode->yCoord, widthGrid);
+
+            // Update the gridView
+            emit updatedScatterGridView(PATH, reverseIndex);
+
+            // Time and checking for stop from running button
+            std::this_thread::sleep_for(std::chrono::milliseconds(speedVisualization));
+        }
+
+    }else{
+        endReached = -1;
+    }
+
+    emit algorithmCompleted();
+}
 void PathAlgorithm::performAStarAlgorithm(QPromise<int>& promise)
 {
 
@@ -622,68 +605,12 @@ void PathAlgorithm::performAStarAlgorithm(QPromise<int>& promise)
     if (promise.isCanceled())
         return;
 
-    // Create connections for each node: only north south east west
+    // Create connections for each node
     for(Node& node: gridNodes.Nodes)
     {
 
-        // east: adding +1 to x:
-        if (node.xCoord + 1 <= widthGrid)
-        {
-            int eastIndex = coordToIndex(node.xCoord + 1, node.yCoord, widthGrid);
-            node.neighbours.push_back(&(gridNodes.Nodes[eastIndex]));
-        }
-
-        // South: adding -1 to y:
-        if (node.yCoord - 1 >= 1)
-        {
-            int southIndex = coordToIndex(node.xCoord, node.yCoord -1, widthGrid);
-            node.neighbours.push_back(&(gridNodes.Nodes[southIndex]));
-        }
-
-        // West: adding -1 to x:
-        if (node.xCoord - 1 >= 1)
-        {
-            int westIndex = coordToIndex(node.xCoord - 1, node.yCoord, widthGrid);
-            node.neighbours.push_back(&(gridNodes.Nodes[westIndex]));
-        }
-
-        // north: adding +1 to y:
-        if (node.yCoord + 1 <= heightGrid)
-        {
-            int northIndex = coordToIndex(node.xCoord, node.yCoord + 1, widthGrid);
-            node.neighbours.push_back(&(gridNodes.Nodes[northIndex]));
-        }
-
-
-        // NorthEst : adding +1 to x and +1 to y
-        if (node.xCoord + 1 <= widthGrid && node.yCoord + 1 <= heightGrid)
-        {
-            int northEstIndex = coordToIndex(node.xCoord + 1, node.yCoord +1, widthGrid);
-            node.neighbours.push_back(&(gridNodes.Nodes[northEstIndex]));
-        }
-
-
-        // SouthEst : adding +1 to x and -1 to y
-        if (node.xCoord + 1 <= widthGrid && node.yCoord - 1 >= 1)
-        {
-            int southEstIndex = coordToIndex(node.xCoord + 1, node.yCoord -1, widthGrid);
-            node.neighbours.push_back(&(gridNodes.Nodes[southEstIndex]));
-        }
-
-        // SouthWest : adding -1 to x and -1 to y
-        if (node.xCoord - 1 >= 1 && node.yCoord - 1 >= 1)
-        {
-            int southWestIndex = coordToIndex(node.xCoord - 1, node.yCoord - 1, widthGrid);
-            node.neighbours.push_back(&(gridNodes.Nodes[southWestIndex]));
-        }
-
-
-        // NorthWest: adding -1 to x and +1 to y
-        if (node.xCoord - 1 >= 1 && node.yCoord + 1 <= heightGrid)
-        {
-            int northWestIndex = coordToIndex(node.xCoord - 1, node.yCoord + 1, widthGrid);
-            node.neighbours.push_back(&(gridNodes.Nodes[northWestIndex]));
-        }
+        // Create connections between nodes (filling the vector neighbours of the Node structure)
+        FillNeighboursNode(node);
 
         // Navigation Graph -> reset all nodes states
         node.globalGoal     = INFINITY;
@@ -698,7 +625,10 @@ void PathAlgorithm::performAStarAlgorithm(QPromise<int>& promise)
                        +(a->yCoord - b->yCoord) * (a->yCoord - b->yCoord));
     };
 
+    // We could use different heuristics
     auto heuristic = [distance](Node* a, Node* b){return distance(a, b);};
+    // heuristic = [](Node* a, Node* b){return 1;};
+
 
     // Starting conditions
     Node* nodeStart = &(gridNodes.Nodes[gridNodes.startIndex]);
@@ -736,14 +666,22 @@ void PathAlgorithm::performAStarAlgorithm(QPromise<int>& promise)
         // Checking each neighbours
         for (Node* nodeNeighbour: nodeCurrent->neighbours)
         {
-
             // Updating the list of nodes to test
+            int nextUpIndex = coordToIndex(nodeNeighbour->xCoord, nodeNeighbour->yCoord, widthGrid);
+
             // If the neighbour has not been visited and is not an obstacle
             if(!nodeNeighbour->visited && !nodeNeighbour->obstacle)
             {
-                nodesToTest.push_back(nodeNeighbour);
-                int nextUpIndex = coordToIndex(nodeNeighbour->xCoord, nodeNeighbour->yCoord, widthGrid);
-                emit updatedScatterGridView(NEXT, nextUpIndex);
+                if (nextUpIndex == gridNodes.endIndex){
+                    // Break and go to retrieving path (by emptying nodesToTest)
+                    nodesToTest.clear();
+                    nodeNeighbour->parent = nodeCurrent;
+                    break;
+
+                }else{
+                    nodesToTest.push_back(nodeNeighbour);
+                    emit updatedScatterGridView(NEXT, nextUpIndex);
+                }
             }
 
             // Neighbours potential lowest parent distance
@@ -786,7 +724,213 @@ void PathAlgorithm::performAStarAlgorithm(QPromise<int>& promise)
         endReached = -1;
     }
 
-
-    simulationOnGoing = false;
     emit algorithmCompleted();
+}
+
+// Maze generation
+void PathAlgorithm::performRecursiveBackTrackerAlgorithm(QPromise<int>& promise)
+{
+
+    // Allow to pause and stop the simulation (to debug)
+    promise.suspendIfRequested();
+    if (promise.isCanceled())
+        return;
+
+    // First step - fill with obstacles
+    for (int index = 0; index < widthGrid * heightGrid; index++){
+
+        if (index != gridNodes.startIndex || index != gridNodes.endIndex){
+
+            gridNodes.Nodes[index].obstacle = true;
+            emit updatedScatterGridView(FREETOOBSTACLE, index);
+        }
+        // Time and checking for stop from running button
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    }
+
+    // stack of visited cells:
+    std::stack<Node*> stackUnVisitedNodes;
+
+    // Pushing the first Node in the stack -> we start at a random index
+    int randomIndex = rand() % (widthGrid * heightGrid);
+    stackUnVisitedNodes.push(&(gridNodes.Nodes[randomIndex]));
+    gridNodes.Nodes[randomIndex].visited = true;
+
+    int numberVisitedCells = 1;
+
+    int offset = 2;
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    while(numberVisitedCells < widthGrid * heightGrid && !stackUnVisitedNodes.empty() ){
+
+        // Current node from the stack
+        Node* currentNode = stackUnVisitedNodes.top();
+        int currentIndex = coordToIndex(currentNode->xCoord, currentNode->yCoord, widthGrid);
+
+        std::vector<int> availableNeighbours;
+
+        // east: adding +1 to x:
+        int eastIndex = coordToIndex(currentNode->xCoord + offset - 1, currentNode->yCoord, widthGrid);
+        int eastIndexOffset = coordToIndex(currentNode->xCoord + offset, currentNode->yCoord, widthGrid);
+        if (currentNode->xCoord + offset <= widthGrid && !gridNodes.Nodes[eastIndexOffset].visited){
+            availableNeighbours.push_back(0);
+        }
+
+        // South: adding -1 to y:
+        int southIndex          =   coordToIndex(currentNode->xCoord,currentNode->yCoord - offset + 1, widthGrid);
+        int southIndexOffset    =   coordToIndex(currentNode->xCoord,currentNode->yCoord - offset, widthGrid);
+        if (currentNode->yCoord - offset >= 1 && !gridNodes.Nodes[southIndexOffset].visited){
+            availableNeighbours.push_back(1);
+        }
+        // West: adding -1 to x:
+        int westIndex = coordToIndex(currentNode->xCoord - offset + 1, currentNode->yCoord, widthGrid);
+        int westIndexOffset = coordToIndex(currentNode->xCoord - offset, currentNode->yCoord, widthGrid);
+
+        if (currentNode->xCoord - offset >= 1 && !gridNodes.Nodes[westIndexOffset].visited){
+            availableNeighbours.push_back(2);
+        }
+
+        // north: adding +1 to y:
+        int northIndex = coordToIndex(currentNode->xCoord, currentNode->yCoord + offset -1, widthGrid);
+        int northIndexOffset = coordToIndex(currentNode->xCoord, currentNode->yCoord + offset, widthGrid);
+        if (currentNode->yCoord + offset <= heightGrid && !gridNodes.Nodes[northIndexOffset].visited){
+            availableNeighbours.push_back(3);
+        }
+
+        // Available neighbours
+        if (!(availableNeighbours.empty())){
+
+            // Choosing one random neighbour
+            int randomNeighour = availableNeighbours[rand() % availableNeighbours.size()];
+
+            // Creating links from the nodes using the inbuilt neighbours vectors in the Node structure
+            switch (randomNeighour) {
+            case 0:
+
+                emit updatedScatterGridView(OBSTACLETOFREE, eastIndex);
+                emit updatedScatterGridView(OBSTACLETOFREE, eastIndexOffset);
+                stackUnVisitedNodes.push(&(gridNodes.Nodes[eastIndexOffset]));
+
+                break;
+            case 1:
+
+                emit updatedScatterGridView(OBSTACLETOFREE, southIndex);
+                emit updatedScatterGridView(OBSTACLETOFREE, southIndexOffset);
+
+                stackUnVisitedNodes.push(&(gridNodes.Nodes[southIndexOffset]));
+
+               // stackVisitedNodes.push(&(gridNodes.Nodes[southIndex]));
+
+                break;
+            case 2:
+
+                emit updatedScatterGridView(OBSTACLETOFREE, westIndex);
+                emit updatedScatterGridView(OBSTACLETOFREE, westIndexOffset);
+
+                stackUnVisitedNodes.push(&(gridNodes.Nodes[westIndexOffset]));
+
+                break;
+            case 3:
+
+                emit updatedScatterGridView(OBSTACLETOFREE, northIndex);
+                emit updatedScatterGridView(OBSTACLETOFREE, northIndexOffset);
+
+                stackUnVisitedNodes.push(&(gridNodes.Nodes[northIndexOffset]));
+
+                break;
+            default:
+                break;
+            }
+
+            numberVisitedCells++;
+            gridNodes.Nodes[currentIndex].visited = true;
+
+            // Time and checking for stop from running button
+            std::this_thread::sleep_for(std::chrono::milliseconds(speedVisualization));
+
+        }else{
+
+            gridNodes.Nodes[currentIndex].visited = true;
+
+            // If there is no available neighbours, we pop
+            if (!stackUnVisitedNodes.empty()){
+                stackUnVisitedNodes.pop();
+            }else{
+                break;
+            }
+
+
+        }
+
+    }
+
+    // We need to reset the visited property to use in the other Algorithms
+    for(Node& node: gridNodes.Nodes)    {   node.visited = false;   }
+
+    emit algorithmCompleted();
+}
+
+
+void PathAlgorithm::FillNeighboursNode(Node& node)
+{
+
+    // east: adding +1 to x:
+    if (node.xCoord + 1 <= widthGrid)
+    {
+        int eastIndex = coordToIndex(node.xCoord + 1, node.yCoord, widthGrid);
+        node.neighbours.push_back(&(gridNodes.Nodes[eastIndex]));
+    }
+
+    // South: adding -1 to y:
+    if (node.yCoord - 1 >= 1)
+    {
+        int southIndex = coordToIndex(node.xCoord, node.yCoord -1, widthGrid);
+        node.neighbours.push_back(&(gridNodes.Nodes[southIndex]));
+    }
+
+    // West: adding -1 to x:
+    if (node.xCoord - 1 >= 1)
+    {
+        int westIndex = coordToIndex(node.xCoord - 1, node.yCoord, widthGrid);
+        node.neighbours.push_back(&(gridNodes.Nodes[westIndex]));
+    }
+
+    // north: adding +1 to y:
+    if (node.yCoord + 1 <= heightGrid)
+    {
+        int northIndex = coordToIndex(node.xCoord, node.yCoord + 1, widthGrid);
+        node.neighbours.push_back(&(gridNodes.Nodes[northIndex]));
+    }
+
+
+    // NorthEst : adding +1 to x and +1 to y
+    if (node.xCoord + 1 <= widthGrid && node.yCoord + 1 <= heightGrid)
+    {
+        int northEstIndex = coordToIndex(node.xCoord + 1, node.yCoord +1, widthGrid);
+        node.neighbours.push_back(&(gridNodes.Nodes[northEstIndex]));
+    }
+
+
+    // SouthEst : adding +1 to x and -1 to y
+    if (node.xCoord + 1 <= widthGrid && node.yCoord - 1 >= 1)
+    {
+        int southEstIndex = coordToIndex(node.xCoord + 1, node.yCoord -1, widthGrid);
+        node.neighbours.push_back(&(gridNodes.Nodes[southEstIndex]));
+    }
+
+    // SouthWest : adding -1 to x and -1 to y
+    if (node.xCoord - 1 >= 1 && node.yCoord - 1 >= 1)
+    {
+        int southWestIndex = coordToIndex(node.xCoord - 1, node.yCoord - 1, widthGrid);
+        node.neighbours.push_back(&(gridNodes.Nodes[southWestIndex]));
+    }
+
+
+    // NorthWest: adding -1 to x and +1 to y
+    if (node.xCoord - 1 >= 1 && node.yCoord + 1 <= heightGrid)
+    {
+        int northWestIndex = coordToIndex(node.xCoord - 1, node.yCoord + 1, widthGrid);
+        node.neighbours.push_back(&(gridNodes.Nodes[northWestIndex]));
+    }
 }

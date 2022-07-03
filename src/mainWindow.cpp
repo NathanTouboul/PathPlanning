@@ -7,7 +7,7 @@
 #include "headers/GridView.h"
 
 
-MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWindow), gridView(24, 23, 25), pathAlgorithm()
+MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWindow), gridView(30, 30, 19), pathAlgorithm()
 {
     // Setup of the window
     ui->setupUi(this);
@@ -29,13 +29,22 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
 
     // Setup
     ui->dialWidth   ->setValue  (gridView.widthGrid);
-    ui->lcdWidth    ->display   (gridView.widthGrid);
+    ui->dialWidth   ->setMinimum(5);
+    ui->dialWidth   ->setMaximum(35);
+    ui->lcdWidth    ->display   (gridView.widthGrid);    
+
     ui->dialHeight  ->setValue  (gridView.heightGrid);
+    ui->dialHeight   ->setMinimum(5);
+    ui->dialHeight   ->setMaximum(35);
     ui->lcdHeight   ->display   (gridView.heightGrid);
+
     ui->sliderMarker->setValue  (gridView.markerSize);
     ui->lcdMarker   ->display   (gridView.markerSize);
 
-
+    // Initial Simulation speed
+    ui->speedSpinBox->setMaximum(100);
+    int speed = ui->speedSpinBox->maximum() / 2;
+    ui->speedSpinBox->setValue  (speed);
 
     // Setting up the chart view
     setupGridView("gridView");
@@ -81,9 +90,10 @@ void MainWindow::setupAlgorithmsComboBox()
     ui->algorithmsBox->setCurrentIndex(-1);
 
     // Adding first interation: BFS
-    ui->algorithmsBox->addItem("BFS");
-    ui->algorithmsBox->addItem("DFS");
-    ui->algorithmsBox->addItem("A*");
+    ui->algorithmsBox->addItem("BFS Algorithm");
+    ui->algorithmsBox->addItem("DFS Algorithm");
+    ui->algorithmsBox->addItem("Dijkstra's Algorithm");
+    ui->algorithmsBox->addItem("A* Algorithm");
 
 }
 
@@ -153,7 +163,6 @@ void MainWindow::on_runButton_clicked()
 
 }
 
-
 void MainWindow::on_mazeButton_clicked()
 {
     gridView.setCurrentAlgorithm(BACKTRACK);
@@ -199,6 +208,7 @@ void MainWindow::on_algorithmsBox_currentIndexChanged(int index)
 void MainWindow::onAlgorithmCompleted()
 {
     gridView.setSimulationRunning(false);
+    pathAlgorithm.setSimulationOnGoing(false);
     ui->runButton->setChecked(false);
     ui->runButton->setText(QString("RUN"));
 
@@ -261,8 +271,8 @@ void MainWindow::on_mazeButton_released()
 }
 
 
-void MainWindow::on_spinBox_valueChanged(int arg1)
+void MainWindow::on_speedSpinBox_valueChanged(int arg1)
 {
-    pathAlgorithm.setSpeedVizualization(100 / arg1);
+    pathAlgorithm.setSpeedVizualization(ui->speedSpinBox->maximum() / arg1);
 }
 

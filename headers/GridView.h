@@ -18,7 +18,7 @@ typedef enum {START, END, OBST, NOINTERACTION} INTERACTIONS;
 typedef enum {EMPTY, MAZE, NOARRANG} ARRANGEMENTS;
 
 // Possible Algorithm chosen in the Algorithm Box
-typedef enum {BFS, DFS, ASTAR, BACKTRACK, NOALGO} ALGOS;
+typedef enum {BFS, DFS, DIJKSTRA, ASTAR, BACKTRACK, NOALGO} ALGOS;
 
 // Possible update in the grid view from the Path Algorithm
 typedef enum {CURRENT, FREE, VISIT, OBSTACLETOFREE, FREETOOBSTACLE, NEXT, PATH, LINE} UPDATETYPES;
@@ -49,7 +49,7 @@ struct grid //: public QObject
     //Q_OBJECT
 
     public:
-    std::vector<Node> Nodes; // Need to be a vector since we will give the user the choice of number of nodes
+    std::vector<Node> Nodes;
     int startIndex;
     int endIndex;
     int currentIndex;
@@ -132,11 +132,7 @@ class GridView: public QChartView
 
         // Handles the changes in the gridView by the path planning algorithm
         bool handleUpdatedScatterGridView(UPDATETYPES updateType, int updateIndex);
-        bool handleUpdatedLineGridView(QPointF updatePoint, bool addingPoint);
-
-    public:
-        // Launching BFS multi threaded
-        void launchingEventBFS();
+        bool handleUpdatedLineGridView(QPointF updatePoint, bool addingPoint, bool clearPriorToUpdate=false);
 
     public:
 

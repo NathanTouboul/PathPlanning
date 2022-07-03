@@ -32,8 +32,8 @@ GridView::GridView(int widthGrid, int heightGrid, int markerSize, QChartView* pa
     endElement          = new QScatterSeries();
 
     // Start, goal elements
-    startElement->append(QPoint());
-    endElement->append(QPoint());
+    startElement    ->append(QPoint());
+    endElement      ->append(QPoint());
 
     // Line series
     pathLine      = new QLineSeries();
@@ -168,7 +168,6 @@ void GridView::populateGridMap(ARRANGEMENTS arrangement, bool reset)
     // Creating the right number of nodes in the grid (should avoid push_back after initialization)
     Node gridNodeBackend;
     for (int i{}; i < widthGrid * heightGrid; i++){gridNodes.Nodes.push_back(gridNodeBackend);}
-
 
     if (arrangement == EMPTY)
     {
@@ -340,7 +339,6 @@ QChart* GridView::createChart()
     chart->setBackgroundBrush(backgroundGradient);
 
     // Chart axis
-    //chart->createDefaultAxes();
     chart->createDefaultAxes();
     chart->setPlotAreaBackgroundVisible(false);
 
@@ -353,6 +351,10 @@ QChart* GridView::createChart()
     // Customize grid lines
     axisX.first()->setGridLineVisible(false);
     axisY.first()->setGridLineVisible(false);
+
+    // Hide axes
+    axisX.first()->setVisible(true);
+    axisX.first()->setVisible(true);
 
     // Connecting signals
     connect(freeElements, &QScatterSeries::clicked, this, &GridView::handleClickedPoint);
@@ -552,10 +554,12 @@ bool GridView::handleUpdatedScatterGridView(UPDATETYPES updateType, int updateIn
     }
     return true;
 }
-bool GridView::handleUpdatedLineGridView(QPointF updatePoint, bool addingPoint)
+bool GridView::handleUpdatedLineGridView(QPointF updatePoint, bool addingPoint, bool clearPriorToUpdate)
 {
+    if (clearPriorToUpdate){
+        pathLine->clear();
+    }
     updateLine(updatePoint, addingPoint);
-    update();
 
     return true;
 }
