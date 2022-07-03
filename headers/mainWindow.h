@@ -47,6 +47,9 @@ public: Q_SIGNALS:
         // Reset the ChartView
         void on_resetButton_clicked();
 
+        // Generate button
+        void on_mazeButton_clicked();
+
         // Handles the different interactions changes
         void on_interactionBox_currentIndexChanged(int index);
 
@@ -61,13 +64,17 @@ public: Q_SIGNALS:
 
         void on_dialHeight_valueChanged(int value);
 
-        void on_horizontalSlider_valueChanged(int value);
+        void on_sliderMarker_valueChanged(int value);
 
-        void on_horizontalSlider_sliderReleased();
+        void on_sliderMarker_sliderReleased();
 
         void on_dialWidth_sliderReleased();
 
         void on_dialHeight_sliderReleased();
+
+        void on_mazeButton_released();
+
+        void on_spinBox_valueChanged(int arg1);
 
 private:
 

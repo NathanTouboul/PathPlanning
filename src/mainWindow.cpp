@@ -7,7 +7,7 @@
 #include "headers/GridView.h"
 
 
-MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWindow), gridView(20, 20, 25), pathAlgorithm()
+MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWindow), gridView(24, 23, 25), pathAlgorithm()
 {
     // Setup of the window
     ui->setupUi(this);
@@ -25,8 +25,17 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
 
     QPalette palette;
     palette.setBrush(QPalette::Window, brush);
-
     setPalette(palette);
+
+    // Setup
+    ui->dialWidth   ->setValue  (gridView.widthGrid);
+    ui->lcdWidth    ->display   (gridView.widthGrid);
+    ui->dialHeight  ->setValue  (gridView.heightGrid);
+    ui->lcdHeight   ->display   (gridView.heightGrid);
+    ui->sliderMarker->setValue  (gridView.markerSize);
+    ui->lcdMarker   ->display   (gridView.markerSize);
+
+
 
     // Setting up the chart view
     setupGridView("gridView");
@@ -142,6 +151,27 @@ void MainWindow::on_runButton_clicked()
 
     }
 
+}
+
+
+void MainWindow::on_mazeButton_clicked()
+{
+    gridView.setCurrentAlgorithm(BACKTRACK);
+    pathAlgorithm.running = true;
+
+    // set the grid node of the path algorithm object;
+    pathAlgorithm.gridNodes = gridView.gridNodes;
+    pathAlgorithm.heightGrid = gridView.heightGrid;
+    pathAlgorithm.widthGrid = gridView.widthGrid;
+
+    // Blocking the interaction with the gridView
+    gridView.setSimulationRunning(true);
+
+    // Enabling the current QScatter series point as visible
+    gridView.AlgorithmView(true);
+
+    // Call path finding
+    pathAlgorithm.runAlgorithm(gridView.getCurrentAlgorithm());
 
 }
 
@@ -171,6 +201,8 @@ void MainWindow::onAlgorithmCompleted()
     gridView.setSimulationRunning(false);
     ui->runButton->setChecked(false);
     ui->runButton->setText(QString("RUN"));
+
+    gridView.setCurrentAlgorithm(ui->algorithmsBox->currentIndex());
 }
 
 void MainWindow::on_dialWidth_valueChanged(int value)
@@ -186,13 +218,13 @@ void MainWindow::on_dialHeight_valueChanged(int value)
 }
 
 
-void MainWindow::on_horizontalSlider_valueChanged(int value)
+void MainWindow::on_sliderMarker_valueChanged(int value)
 {
     ui->lcdMarker->display(value);
 }
 
 
-void MainWindow::on_horizontalSlider_sliderReleased()
+void MainWindow::on_sliderMarker_sliderReleased()
 {
     // Set the new marker size
     gridView.markerSize = ui->lcdMarker->value();
@@ -220,5 +252,17 @@ void MainWindow::on_dialHeight_sliderReleased()
     // Resetting the gridview
     gridView.populateGridMap(gridView.getCurrentArrangement(), true);
 
+}
+
+
+void MainWindow::on_mazeButton_released()
+{
+
+}
+
+
+void MainWindow::on_spinBox_valueChanged(int arg1)
+{
+    pathAlgorithm.setSpeedVizualization(100 / arg1);
 }
 

@@ -19,9 +19,12 @@ class PathAlgorithm : public QObject
         //Destructor
         virtual ~PathAlgorithm();
 
-        //Getters: current Algorithm from gridView
+        //Getters/Setters: current Algorithm from gridView
         ALGOS getCurrentAlgorithm() const;
+        void setCurrentAlgorithm(ALGOS algorithm);
 
+        //Getters/Setters: speed visualization
+        void setSpeedVizualization(int speed);
 
         // Running pausing and canceling algorithms
         void runAlgorithm(ALGOS algorithm);
@@ -29,10 +32,13 @@ class PathAlgorithm : public QObject
         void resumeAlgorithm();
         void stopAlgorithm();
 
-        // Different Algorithms
+        // Path planning Algorithms
         void performBFSAlgorithm(QPromise<int>& promise);
         void performDFSAlgorithm(QPromise<int>& promise);
         void performAStarAlgorithm(QPromise<int>& promise);
+
+        // Maze generation
+        void performRecursiveBackTrackerAlgorithm(QPromise<int>& promise);
 
         // Retrieving the neighbors of a point in a grid
         std::vector<Node> retrieveNeighborsGrid(const grid& gridNodes, const Node& currentNode, int widthGrid, int heightGrid);
@@ -40,8 +46,8 @@ class PathAlgorithm : public QObject
         void checkGridNode(grid gridNodes, int heightGrid, int widthGrid);
 
     public: Q_SIGNALS:
-        void updatedScatterGridView(UPDATETYPES VISIT, int currentIndex);
-        void updatedLineGridView(QPointF currentPoint, bool addingPoint);
+        void updatedScatterGridView (UPDATETYPES VISIT,     int currentIndex);
+        void updatedLineGridView    (QPointF currentPoint,  bool addingPoint);
 
         void algorithmCompleted();
 

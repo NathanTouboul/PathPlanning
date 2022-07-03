@@ -12,16 +12,16 @@
 QT_USE_NAMESPACE
 
 // Possible interactions in the gridview chosen in the Interaction Box
-typedef enum {START, END, OBSTACLE, NOINTERACTION} INTERACTIONS;
+typedef enum {START, END, OBST, NOINTERACTION} INTERACTIONS;
 
 // Possible grid arrangement chosen in the Maze Box
 typedef enum {EMPTY, MAZE, NOARRANG} ARRANGEMENTS;
 
 // Possible Algorithm chosen in the Algorithm Box
-typedef enum {BFS, DFS, ASTAR, NOALGO} ALGOS;
+typedef enum {BFS, DFS, ASTAR, BACKTRACK, NOALGO} ALGOS;
 
 // Possible update in the grid view from the Path Algorithm
-typedef enum {CURRENT, VISIT, NEXT, PATH, LINE} UPDATETYPES;
+typedef enum {CURRENT, FREE, VISIT, OBSTACLETOFREE, FREETOOBSTACLE, NEXT, PATH, LINE} UPDATETYPES;
 
 
 // Node structure
@@ -109,12 +109,15 @@ class GridView: public QChartView
 
         // Replacing points in gridView
         void replaceStartbyCurrent();
-        void replaceFreebyCurrent(int updateIndex);
-        void replaceObstaclebyCurrent(int updateIndex);
-        void replaceFreebyVisited(int updateIndex);
-        void replaceFreebyNext(int updateIndex);
-        void replaceNextbyVisited(int updateIndex);
-        void replaceVisitedbyPath(int updateIndex);
+        void replaceFreebyCurrent       (int updateIndex);
+        void replaceFreebyNext          (int updateIndex);
+        void replaceFreebyVisited       (int updateIndex);
+        void replaceFreebyObstacle      (int updateIndex);
+        void replaceObstaclebyCurrent   (int updateIndex);
+        void replaceObstaclebyFree      (int updateIndex);
+        void replaceVisitedbyPath       (int updateIndex);
+        void replaceNextbyFree          (int updateIndex);
+        void replaceNextbyVisited       (int updateIndex);
 
         // Update Line
         void updateLine(QPointF updatePoint, bool addingPoint);
