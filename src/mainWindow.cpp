@@ -43,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
 
     // Initial Simulation speed
     ui->speedSpinBox->setMaximum(100);
-    int speed = ui->speedSpinBox->maximum() / 2;
+    int speed = ui->speedSpinBox->maximum() / 5;
     ui->speedSpinBox->setValue  (speed);
 
     // Setting up the chart view
@@ -133,7 +133,8 @@ void MainWindow::on_runButton_clicked()
             gridView.setSimulationRunning(true);
 
             ui->runButton->setChecked(true);
-            ui->runButton->setText(QString("PAUSE"));
+            //ui->runButton->setText(QString("PAUSE"));
+            ui->runButton->setText(QString("RUNNING"));
         }
 
     }else{
@@ -148,7 +149,8 @@ void MainWindow::on_runButton_clicked()
         // Setting the run button as checkble and checked
         ui->runButton->setCheckable(true);
         ui->runButton->setChecked(true);
-        ui->runButton->setText(QString("PAUSE"));
+        //ui->runButton->setText(QString("PAUSE"));
+        ui->runButton->setText(QString("RUNNING"));
 
         // Blocking the interaction with the gridView
         gridView.setSimulationRunning(true);

@@ -1,4 +1,3 @@
-
 QT      += charts core gui concurrent testlib
 
 CONFIG += c++17

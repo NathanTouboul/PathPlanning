@@ -1,4 +1,5 @@
 #include "headers/PathAlgorithm.h"
+#include "QtConcurrent/qtconcurrentrun.h"
 #include <iostream>
 #include <queue>
 #include <map>
