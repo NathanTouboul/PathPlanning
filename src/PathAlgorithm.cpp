@@ -240,7 +240,6 @@ void PathAlgorithm::performBFSAlgorithm(QPromise<int>& promise)
         currentNode =  nextNodes.front(); nextNodes.pop();
         int currentIndex = coordToIndex(currentNode.xCoord, currentNode.yCoord, widthGrid);
 
-
         // updating Line gridView
         emit updatedLineGridView(QPointF(currentNode.xCoord, currentNode.yCoord), addingPoint);
         addingPoint = false;
@@ -303,8 +302,6 @@ void PathAlgorithm::performBFSAlgorithm(QPromise<int>& promise)
             moveCount++;
             addingPoint = true;
         }
-
-        //std::cerr << "MOVE COUNT: " << moveCount << "\n";
 
     }
 
@@ -378,12 +375,16 @@ void PathAlgorithm::performDFSAlgorithm(QPromise<int>& promise)
 
     // Initialization current node
     Node currentNode;
-
+    bool addingPoint = true;
     while(!nextNodes.empty())
     {
         // Current Node
         currentNode =  nextNodes.top(); nextNodes.pop();
         int currentIndex = coordToIndex(currentNode.xCoord, currentNode.yCoord, widthGrid);
+
+        // updating Line gridView
+        emit updatedLineGridView(QPointF(currentNode.xCoord, currentNode.yCoord), addingPoint);
+        addingPoint = false;
 
         if (currentIndex == gridNodes.endIndex)
         {
@@ -436,11 +437,12 @@ void PathAlgorithm::performDFSAlgorithm(QPromise<int>& promise)
         }
 
         // if all nodes in the current layer have been checked
-        if (nodesLeftInCurrentLayer == 0)
-        {
+        if (nodesLeftInCurrentLayer == 0){
             nodesLeftInCurrentLayer = nodesInNextLayer;
             nodesInNextLayer = 0;
             moveCount++;
+            addingPoint = true;
+
         }
 
     }
@@ -456,9 +458,14 @@ void PathAlgorithm::performDFSAlgorithm(QPromise<int>& promise)
         Node goal = currentNode;
         Node reverse = goal;
 
+        // Line Path
+        emit updatedLineGridView(QPointF(reverse.xCoord, reverse.yCoord), true, true);
+
         int count=0;
         while(reverse.xCoord != gridNodes.Nodes[gridNodes.startIndex].xCoord || reverse.yCoord != gridNodes.Nodes[gridNodes.startIndex].yCoord)
         {
+            emit updatedLineGridView(QPointF(reverse.xCoord, reverse.yCoord), true, false);
+
             int reverseIndex = coordToIndex(reverse.xCoord, reverse.yCoord, widthGrid);
             Node parentNode = parentNodes[reverseIndex];
 
@@ -467,6 +474,7 @@ void PathAlgorithm::performDFSAlgorithm(QPromise<int>& promise)
             count++;
             std::this_thread::sleep_for(std::chrono::milliseconds(speedVisualization));
         }
+        emit updatedLineGridView(QPointF(gridNodes.Nodes[gridNodes.startIndex].xCoord, gridNodes.Nodes[gridNodes.startIndex].yCoord), true, false);
 
     }else{
         endReached = false;
@@ -515,6 +523,7 @@ void PathAlgorithm::performDijkstraAlgorithm(QPromise<int>& promise)
 
     while(!nodesToTest.empty())
     {
+
         // Sorting untested nodes by global goal
         nodesToTest.sort([](const Node* a, const Node* b){return a->localGoal < b->localGoal;});
 
@@ -562,15 +571,14 @@ void PathAlgorithm::performDijkstraAlgorithm(QPromise<int>& promise)
             float potentialLowerGoal = nodeCurrent->localGoal + distance(nodeCurrent, nodeNeighbour);
 
             // If choosing to path this node is a lower distance that what currently the neighbours has set
-            if (potentialLowerGoal < nodeNeighbour->localGoal)
-            {
+            if (potentialLowerGoal < nodeNeighbour->localGoal){
                 // Selecting the current node as the neighbour's parent
                 nodeNeighbour->parent = nodeCurrent;
                 nodeNeighbour->localGoal = potentialLowerGoal;
+
             }
 
         }
-
 
 
     }
@@ -580,17 +588,24 @@ void PathAlgorithm::performDijkstraAlgorithm(QPromise<int>& promise)
 
         // Retrieving and plotting the path
         Node* reverseNode = nodeEnd;
+
+        // Line Path
+        emit updatedLineGridView(QPointF(reverseNode->xCoord, reverseNode->yCoord), true, true);
+
         while(reverseNode->parent != nullptr)
         {
+
             reverseNode = reverseNode->parent;
             int reverseIndex = coordToIndex(reverseNode->xCoord, reverseNode->yCoord, widthGrid);
 
             // Update the gridView
             emit updatedScatterGridView(PATH, reverseIndex);
+            emit updatedLineGridView(QPointF(reverseNode->xCoord, reverseNode->yCoord), true, false);
 
             // Time and checking for stop from running button
             std::this_thread::sleep_for(std::chrono::milliseconds(speedVisualization));
         }
+        emit updatedLineGridView(QPointF(gridNodes.Nodes[gridNodes.startIndex].xCoord, gridNodes.Nodes[gridNodes.startIndex].yCoord), true, false);
 
     }else{
         endReached = -1;
@@ -709,6 +724,9 @@ void PathAlgorithm::performAStarAlgorithm(QPromise<int>& promise)
 
         // Retrieving and plotting the path
         Node* reverseNode = nodeEnd;
+
+        // Line Path
+        emit updatedLineGridView(QPointF(reverseNode->xCoord, reverseNode->yCoord), true, true);
         while(reverseNode->parent != nullptr)
         {
             reverseNode = reverseNode->parent;
@@ -716,10 +734,13 @@ void PathAlgorithm::performAStarAlgorithm(QPromise<int>& promise)
 
             // Update the gridView
             emit updatedScatterGridView(PATH, reverseIndex);
+            emit updatedLineGridView(QPointF(reverseNode->xCoord, reverseNode->yCoord), true, false);
+
 
             // Time and checking for stop from running button
             std::this_thread::sleep_for(std::chrono::milliseconds(speedVisualization));
         }
+        emit updatedLineGridView(QPointF(gridNodes.Nodes[gridNodes.startIndex].xCoord, gridNodes.Nodes[gridNodes.startIndex].yCoord), true, false);
 
     }else{
         endReached = -1;

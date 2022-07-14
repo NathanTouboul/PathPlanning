@@ -34,8 +34,8 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
     ui->lcdWidth    ->display   (gridView.widthGrid);    
 
     ui->dialHeight  ->setValue  (gridView.heightGrid);
-    ui->dialHeight   ->setMinimum(5);
-    ui->dialHeight   ->setMaximum(35);
+    ui->dialHeight  ->setMinimum(5);
+    ui->dialHeight  ->setMaximum(35);
     ui->lcdHeight   ->display   (gridView.heightGrid);
 
     ui->sliderMarker->setValue  (gridView.markerSize);
