@@ -13,12 +13,27 @@ The algorithms implemented here are the following:
 - DFS
 - Back-Tracking (for maze generation)
 
-Apart from using Qt data types, I used multithreading for real-time simulation and visualization.This is helful to have a GUI with great performance. Also, the nice thing about multithreading is that we can change the speed of the simulation dynamically.
+Apart from using Qt data types, I used multithreading for real-time simulation and visualization. This is helpful to have a GUI with great performance. Also, the nice thing about multithreading is that we can change the speed of the simulation dynamically.
 
 ## GUI 
 The GUI was created using Qt Creator. There are two main tabs:
-- Simulation: Selecting the algorithm, placing the start and goal, and adding/removing obstacles
-    PICTURE TAB SIMULATION
-- Vizualization: Increasing the number of nodes horizontally and vertically, and changing the size of these nodes.
-    PICTURE TAB VISUALIZATION
 
+### Simulation: 
+
+Selecting the algorithm, placing the start and goal, and adding/removing obstacles
+
+<p align=center>
+<img src=images\tab_simulation.png width= 500>
+</p>
+<p align=center>
+Simulation Tab
+</p>
+
+### Visualization: 
+Increasing the number of nodes horizontally and vertically, and changing the size of these nodes.
+<p align=center>
+<img src=images\tab_visualization.png width=500>
+</p>
+<p align=center>
+Visualization Tab
+</p>
