@@ -28,7 +28,7 @@ The GUI was created using Qt Creator. There are two main tabs:
 Selecting the algorithm, placing the start and goal, and adding/removing obstacles
 
 <p align=center>
-<img src=images\Animation_simulation.gif>
+<img src=images\Animation_Simulation.gif>
 </p>
 <p align=center>
 <em> Simulation Tab </em>
