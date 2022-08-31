@@ -2,8 +2,13 @@
 
 This project is centered around path-finding algorithms and the Qt framework. The idea was for me to find a good way to visualize those algorithms searching for the goal while building with a "pretty" GUI. The entire application is coded with C++ and built with qmake.
 
-VIDEO
 
+<p align=center>
+<img src=images\Animation.gif>
+</p>
+<p align=center>
+ <em> Main application </em>
+</p>
 
 ## Algorithms
 The algorithms implemented here are the following:
@@ -23,17 +28,19 @@ The GUI was created using Qt Creator. There are two main tabs:
 Selecting the algorithm, placing the start and goal, and adding/removing obstacles
 
 <p align=center>
-<img src=images\tab_simulation.png width= 500>
+<img src=images\Animation_simulation.gif>
 </p>
 <p align=center>
-Simulation Tab
+<em> Simulation Tab </em>
+
 </p>
 
 ### Visualization: 
 Increasing the number of nodes horizontally and vertically, and changing the size of these nodes.
 <p align=center>
-<img src=images\tab_visualization.png width=500>
+<img src=images\Animation_Visualization1.gif>
+<img src=images\Animation_Visualization2.gif>
 </p>
 <p align=center>
-Visualization Tab
+<em> Visualization Tabs </em>
 </p>
